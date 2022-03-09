@@ -61,6 +61,14 @@ trainingImage{2} = imread('./LoadingPics/RightArrow.jpg');          % (2) load r
 trainingImage{3} = imread('./LoadingPics/LeftArrow.jpg');            % (3) load left arrow image
 trainingImage{4} = imread('./LoadingPics/downArrow.jpg');            % (4) load down arrow image
 
+% Change This
+trainingSound{1} = audioread('.Sounds/idle.?');
+trainingSound{2} = audioread('.Sounds/right.?');
+trainingSound{3} = audioread('.Sounds/left.?');
+trainingSound{4} = audioread('.Sounds/down.?');
+soundBits = 16; 
+
+
 % number of channels
 nbChan = 16;        
 % Number of bands
@@ -134,6 +142,7 @@ for trial_i = 1:numTrials * numClass
     image(flip(trainingImage{currentTrial}, 1), 'XData', [0.25, 0.75],...
         'YData', [0.25, 0.75 * ...
         size(trainingImage{currentTrial},1)./ size(trainingImage{currentTrial},2)])
+    sound(trainingSound{currentTrial,1}, trainingSound{currentTrial,1}, soundBits) 
     % Pause for cue length
     pause(cueLength);
     % Clear axis
@@ -156,7 +165,8 @@ for trial_i = 1:numTrials * numClass
     % Show image of the corresponding label of the trial
     image(flip(trainingImage{currentTrial}, 1), 'XData', [0.25, 0.75],...
         'YData', [0.25, 0.75 * ...
-        size(trainingImage{currentTrial},1)./ size(trainingImage{currentTrial},2)])    
+        size(trainingImage{currentTrial},1)./ size(trainingImage{currentTrial},2)])
+    sound(trainingSound{currentTrial,1}, trainingSound{currentTrial,1}, soundBits)
     % Pause for trial length
     pause(trialLength)
     % Clear axis
