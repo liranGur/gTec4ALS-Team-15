@@ -61,12 +61,12 @@ trainingImage{2} = imread('./LoadingPics/RightArrow.jpg');          % (2) load r
 trainingImage{3} = imread('./LoadingPics/LeftArrow.jpg');            % (3) load left arrow image
 trainingImage{4} = imread('./LoadingPics/downArrow.jpg');            % (4) load down arrow image
 
-% Change This
-trainingSound{1} = audioread('.Sounds/idle.?');
-trainingSound{2} = audioread('.Sounds/right.?');
-trainingSound{3} = audioread('.Sounds/left.?');
-trainingSound{4} = audioread('.Sounds/down.?');
-soundBits = 16; 
+% Load sound
+trainingSound{1} = audioread('./Sounds/idle.wmv');
+trainingSound{2} = audioread('./Sounds/right.wmv');
+trainingSound{3} = audioread('./Sounds/left.wmv');
+trainingSound{4} = audioread('./Sounds/down.wmv');
+sound_fs = 49920;   % sound frequency
 
 
 % number of channels
@@ -88,7 +88,7 @@ restingStateBands = zeros(7, nbBands, numClass*numTrials);
 monitorPos = get(0,'MonitorPositions');
 monitorN = size(monitorPos, 1);
 % Which monitor to use TODO: make a parameter
-choosenMonitor = 2;
+choosenMonitor = 1;
 % If no 2nd monitor found, use the main monitor
 if choosenMonitor < monitorN
     choosenMonitor = 1;
@@ -142,7 +142,7 @@ for trial_i = 1:numTrials * numClass
     image(flip(trainingImage{currentTrial}, 1), 'XData', [0.25, 0.75],...
         'YData', [0.25, 0.75 * ...
         size(trainingImage{currentTrial},1)./ size(trainingImage{currentTrial},2)])
-    sound(trainingSound{currentTrial,1}, trainingSound{currentTrial,1}, soundBits) 
+    sound(trainingSound{1,currentTrial}, sound_fs) 
     % Pause for cue length
     pause(cueLength);
     % Clear axis
@@ -166,7 +166,7 @@ for trial_i = 1:numTrials * numClass
     image(flip(trainingImage{currentTrial}, 1), 'XData', [0.25, 0.75],...
         'YData', [0.25, 0.75 * ...
         size(trainingImage{currentTrial},1)./ size(trainingImage{currentTrial},2)])
-    sound(trainingSound{currentTrial,1}, trainingSound{currentTrial,1}, soundBits)
+    sound(trainingSound{1,currentTrial}, sound_fs)
     % Pause for trial length
     pause(trialLength)
     % Clear axis

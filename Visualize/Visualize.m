@@ -2,6 +2,7 @@ close all; clear; clc;
 %% setting single record
 recordingFolder = uigetdir('C:/Subjects/', ...
     'Choose Desired Directory');
+
 load(strcat(recordingFolder,'\EEG.mat'), 'EEG')
 load(strcat(recordingFolder,'\trainingVec.mat'), 'trainingVec')
 
@@ -303,6 +304,7 @@ for elec_i = 0:elec_N-1
         xlabel('Time [Sec]' ,'FontSize' ,Font.label)
     end
     set(gca,'YDir','normal')
+   
     % % %
     % % %     subplot(elec_N,6,elec_i*6+4)
     % % %     imagesc(wind2time,f,DifLR.(elec_name{elec_i+1})(:,:,elec_i+1))
@@ -350,6 +352,38 @@ for elec_i = 0:elec_N-1
     % % %     set(gca,'YDir','normal')
     
 end
+
+elec_names_diff = {{'C3','C4'}, {'Cz','C3'}, {'Cz','C4'}};
+
+for curr = 1:elec_N
+    name = [elec_names_diff{curr}{1}, elec_names_diff{curr}{2}];
+    Diff.Right.(name) = squeeze(abs(mean(Right.(elec_name{1})) - mean(Right.(elec_name{2})))); 
+    Diff.Left.(name) = squeeze(abs(mean(Left.(elec_name{1})) - mean(Left.(elec_name{2})))); 
+    Diff.Idle.(name) = squeeze(abs(mean(Idle.(elec_name{1})) - mean(Idle.(elec_name{2})))); 
+end
+
+classes = {'Left','Right','Idle'};
+figure('units' , 'centimeters' , 'position' , spec_diff_fig_sz)
+for curr_elec = 1:elec_N
+    name = [elec_names_diff{curr_elec}{1}, elec_names_diff{curr_elec}{2}];
+    for curr_class = 1:3
+        subplot(3, 3, curr_class + (curr_elec-1)*3)
+        imagesc(wind2time,f,Diff.(classes{curr_class}).(name) )
+        if curr_elec == 1
+            title(classes{curr_class} , 'FontSize' , Font.title);
+        end       
+        if curr_class == 1
+                ylabel([elec_names_diff{curr_elec}{1}, '-', elec_names_diff{curr_elec}{2}],'FontSize' ,Font.label)
+        end
+        % ylabel(elec_name{elec_i+1} ,'FontSize' ,Font.label)
+        set(gca,'FontSize',Font.axebig) %Axes font size.
+        colormap(jet)
+        set(gca,'YDir','normal')
+    end
+end
+cb = colorbar('location' , 'manual', 'Position' , [0.92,0.23,0.0245,0.552]);
+cb.Label.String = 'Power difference [dB]';
+
 
 %% Power spectrum
 power_left = zeros(elec_N*3 , length(f) , sampels_N_left);
@@ -441,3 +475,40 @@ for elec_i = 1:elec_N
     set(gca,'FontSize',Font.axebig) %Axes font size.
 end
 legend(elec_name, 'Position' , [0.921,0.423,0.056,0.1374])
+
+%%
+
+
+%Plot ERP difference
+
+for curr = 1:3
+    figure('units' , 'centimeters' , 'position' , erp_fig_sz)
+
+    subplot(3,1,1)
+    hold on
+    plot(time_v, (ERP.left.(elec_names_diff{curr}{1}) - ERP.left.(elec_names_diff{curr}{2})))
+    title(['Left Trials ', elec_names_diff{curr}{1},'-', elec_names_diff{curr}{2}])
+    ylabel('Amplitude [\muV]')
+    xlim([time_v(1) time_v(end)])
+    set(gca,'FontSize',Font.axebig) %Axes font size.
+
+    %Plot ERP difference
+    subplot(3,1,2)
+    hold on
+    plot(time_v, (ERP.right.(elec_names_diff{curr}{1}) - ERP.right.(elec_names_diff{curr}{2}) ))
+    title(['Right Trials ', elec_names_diff{curr}{1},'-', elec_names_diff{curr}{2}])
+    ylabel('Amplitude [\muV]')
+    xlim([time_v(1) time_v(end)])
+    set(gca,'FontSize',Font.axebig) %Axes font size.
+
+
+    %Plot ERP difference
+    subplot(3,1,3)
+    hold on
+    plot(time_v, (ERP.Idle.(elec_names_diff{curr}{1}) - ERP.Idle.(elec_names_diff{curr}{2})))
+    title(['Idle Trials ', elec_names_diff{curr}{1},'-', elec_names_diff{curr}{2}])
+    ylabel('Amplitude [\muV]')
+    xlim([time_v(1) time_v(end)])
+    set(gca,'FontSize',Font.axebig) %Axes font size.
+    
+end
