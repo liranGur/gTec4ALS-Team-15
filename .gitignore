@@ -8,3 +8,10 @@
 *.cfg
 *.txt
 g.tec Softwares/*
+
+*idea
+*idea/*
+*.iml
+*.pyc
+*catboost_info*
+Python-TestModels/data/*
