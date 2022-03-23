@@ -42,7 +42,7 @@ for channel = 1:numChans
     
     n = 1;
     % Band power features
-    for band_i = 1:bands_N
+    for band_i = 1:
         % Extract bandpower
         MIFeaturesLabel(channel, n, :) = ...
             bandpower(squeeze(MIData(channel, :, :)),Hz,bands{band_i});

@@ -356,10 +356,12 @@ end
 elec_names_diff = {{'C3','C4'}, {'Cz','C3'}, {'Cz','C4'}};
 
 for curr = 1:elec_N
-    name = [elec_names_diff{curr}{1}, elec_names_diff{curr}{2}];
-    Diff.Right.(name) = squeeze(abs(mean(Right.(elec_name{1})) - mean(Right.(elec_name{2})))); 
-    Diff.Left.(name) = squeeze(abs(mean(Left.(elec_name{1})) - mean(Left.(elec_name{2})))); 
-    Diff.Idle.(name) = squeeze(abs(mean(Idle.(elec_name{1})) - mean(Idle.(elec_name{2})))); 
+    x = elec_names_diff{curr}{1};
+    y = elec_names_diff{curr}{2};
+    name = [x,y];
+    Diff.Right.(name) = squeeze(abs(mean(Right.(x)) - mean(Right.(y)))); 
+    Diff.Left.(name) = squeeze(abs(mean(Left.(x)) - mean(Left.(y)))); 
+    Diff.Idle.(name) = squeeze(abs(mean(Idle.(x)) - mean(Idle.(y)))); 
 end
 
 classes = {'Left','Right','Idle'};
@@ -486,7 +488,7 @@ for curr = 1:3
 
     subplot(3,1,1)
     hold on
-    plot(time_v, (ERP.left.(elec_names_diff{curr}{1}) - ERP.left.(elec_names_diff{curr}{2})))
+    plot(time_v, (ERP.left.(elec_names_diff{curr}{1}) - ERP.left.(elec_names_diff{curr}{2})) )
     title(['Left Trials ', elec_names_diff{curr}{1},'-', elec_names_diff{curr}{2}])
     ylabel('Amplitude [\muV]')
     xlim([time_v(1) time_v(end)])
