@@ -1,27 +1,18 @@
 function [EEG, fullTrainingVec, expectedClasses] = ...  % TODO return EEG and ??
-    OfflineTrainingP(timeBetweenTriggers, calibrationTime, pauseBetweenTrails, numTrails, ...
+    OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrails, numTrails, ...
                      numClasses, oddBallProb, sequenceLength, baseStartLen, ...
-                     Hz, recordingFolder)
+                     recordingFolder, USBobj, Hz)
 % amsel TODO
 % 1) replace Hz and ??? with USBObj that will be received as parameter
 % How can I record overlapping smaples - use 2 overlapping buffers / do it
 % manually
 
-%% Set up Simulink
-USBobj          = 'USBamp_offline';
-AMPobj          = [USBobj '/g.USBamp UB-2016.03.01'];
-IMPobj          = [USBobj '/Impedance Check'];
-SampleSizeObj   = [USBobj '/Sample Size'];
-scopeObj        = [USBobj '/g.SCOPE'];          % amsel TODO WHAT Is THIS
-
-% RestDelayobj    = [USBobj '/Resting Delay'];
-% ChunkDelayobj   = [USBobj '/Chunk Delay'];
-
+%% open Simulink
+% Set simulink buffer size
 trailTime = baseStartLen + sequenceLength*timeBetweenTriggers;
 eegSampleSize = Hz*trailTime;                      
 set_param(SampleSizeObj,'siz',eegSampleSize);
 
-% open Simulink
 open_system(['Utillity/' USBobj])
 set_param(USBobj,'BlockReduction', 'off')       % amsel TODO WHAT Is THIS
 
@@ -126,20 +117,6 @@ end
 
 
 %% Save Results
-save(strcat(recordingFolder, 'trainingSequences.mat'), 'fullTrainingVec');
-save(strcat(recordingFolder, 'EEG.mat'), 'EEG');
-save(strcat(recordingFolder, 'trainingLabels.mat'), 'expectedClasses');
-parametersToSave = struct('timeBetweenTriggers', timeBetweenTriggers, ...
-                           'calibrationTime', calibrationTime, ...
-                           'pauseBetweenTrails',pauseBetweenTrails, ...
-                           'numTrails', numTrails, ... 
-                           'startingNormalTriggers', startingNormalTriggers, ...
-                           'numClasses', numClasses, ...
-                           'oddBallProb', oddBallProb, ...
-                           'sequenceLength', sequenceLength, ...
-                           'baseStartLen', baseStartLen, ...
-                           'Hz', Hz, ...
-                           'trailTime', trailTime);
-save(strcat(recordingFolder, 'parameters.mat'), 'parametersToSave')
+
 
 close(MainFig)
