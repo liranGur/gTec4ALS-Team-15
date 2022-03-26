@@ -27,12 +27,12 @@ function [EEG, fullTrainingVec, expectedClasses] = ...
 
 % Set simulink recording buffer size
 SampleSizeObj = [USBobj '/Sample Size'];
-trailTime = trialLength*timeBetweenTriggers + 1; % Add 1 seconds as a safety buffer at the begingin of trail EEG data
+trailTime = trialLength*timeBetweenTriggers + 3; % 3 is a recording safety buffer
 eegSampleSize = Hz*trailTime;                      
 set_param(SampleSizeObj,'siz',eegSampleSize);
 
 
-scopeObj = [USBobj '/g.SCOPE'];
+scopeObj = [USBobj '/g.SCOPE'];                 % amsel TODO WHAT Is THIS
 open_system(['Utillity/' USBobj])
 set_param(USBobj,'BlockReduction', 'off')       % amsel TODO WHAT Is THIS
 
@@ -122,7 +122,6 @@ for currTrail = 1:numTrials
         pause(timeBetweenTriggers)
     end
     
-    EEG(currTrail, :, :) = recordingBuffer.OutputPort(1).Data';  
     % End of Trail
     cla
     text(0.5,0.5 ,...
@@ -130,6 +129,8 @@ for currTrail = 1:numTrials
          'Pausing for: ' int2str(pauseBetweenTrials) ' seconds before next trail.'], ...
          'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
     sound(endTrailSound, sound_fs)
+    pause(0.5)  % pausing as a safety buffer for final trigger recording in EEG
+    EEG(currTrail, :, :) = recordingBuffer.OutputPort(1).Data';  
     pause(pauseBetweenTrials)
     
 end
