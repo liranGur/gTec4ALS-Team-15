@@ -10,7 +10,9 @@ class Const:
     training_parameters: Tuple = ('parameters.mat', 'parametersToSave')
     time_pause_between_triggers: str = 'timeBetweenTriggers'
     hz: str = 'Hz'
-    start_pause_length: str = 'baseStartLen'
+    start_pause_length: str = 'startingNormalTriggers'
+    num_trials: str = 'numTrials'
+    trail_length: str = 'trialLength'
 
 
 @dataclass
