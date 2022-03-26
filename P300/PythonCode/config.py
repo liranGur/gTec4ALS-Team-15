@@ -22,4 +22,3 @@ class Configurations:
 
 config = Configurations()
 const = Const()
-__all__ = ['config', 'const']
