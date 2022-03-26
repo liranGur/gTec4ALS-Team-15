@@ -3,49 +3,36 @@ function [] = OfflinePipline()
 
 %% Create Simulink Object
 USBobj          = 'USBamp_offline';
-AMPobj          = [USBobj '/g.USBamp UB-2016.03.01'];
 IMPobj          = [USBobj '/Impedance Check'];
-SampleSizeObj   = [USBobj '/Sample Size'];
-scopeObj        = [USBobj '/g.SCOPE'];          % amsel TODO WHAT Is THIS
 
-% RestDelayobj    = [USBobj '/Resting Delay'];
-% ChunkDelayobj   = [USBobj '/Chunk Delay'];
+%% Parameter Setting
 
-%% Parameter Setting - until we have GUI for this
-baseStartLen = 3;
-sequenceLength = 20;
-timeBetweenTriggers = 1;        % in seconds
-Hz = 512;
+[Hz, trialLength, numClasses, subId, numTrials, timeBetweenTriggers, oddBallProb, ...
+    calibrationTime, pauseBetweenTrials] = GUIFiles.ParametersGui(IMPobj);
+
+startingNormalTriggers = 3;
 eegChannels = 16;
-recordingFolder = 'tmp';
-calibrationTime = 20;           % in seconds
-pauseBetweenTrails = 10;        % in seconds
-numTrails = 3;
-numClasses = 3;
-oddBallProb = 0.2;
+recordingFolder = ['tmp' int2str(subId)];
 
 
-
-%% Start training
+%% Training
 [EEG, fullTrainingVec, expectedClasses] = ...
-    OfflineTraining(timeBetweenTriggers, calibrationTime,pauseBetweenTrails, numTrails, ...
-                    numClasses, oddBallProb, sequenceLength, baseStartLen, recordingFolder, ...,
-                    USBobj, Hz);
+    OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, ...
+                    numClasses, oddBallProb, trialLength, startingNormalTriggers, ...
+                    USBobj, Hz, eegChannels)
 
 save(strcat(recordingFolder, 'trainingSequences.mat'), 'fullTrainingVec');
 save(strcat(recordingFolder, 'EEG.mat'), 'EEG');
 save(strcat(recordingFolder, 'trainingLabels.mat'), 'expectedClasses');
 parametersToSave = struct('timeBetweenTriggers', timeBetweenTriggers, ...
                            'calibrationTime', calibrationTime, ...
-                           'pauseBetweenTrails',pauseBetweenTrails, ...
-                           'numTrails', numTrails, ... 
+                           'pauseBetweenTrials',pauseBetweenTrials, ...
+                           'numTrials', numTrials, ... 
                            'startingNormalTriggers', startingNormalTriggers, ...
                            'numClasses', numClasses, ...
                            'oddBallProb', oddBallProb, ...
-                           'sequenceLength', sequenceLength, ...
-                           'baseStartLen', baseStartLen, ...
-                           'Hz', Hz, ...
-                           'trailTime', trailTime);
+                           'trialLength', trialLength, ...
+                           'Hz', Hz);
 save(strcat(recordingFolder, 'parameters.mat'), 'parametersToSave')
 
 % PreProcess & modelsing??

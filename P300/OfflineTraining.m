@@ -1,18 +1,38 @@
 function [EEG, fullTrainingVec, expectedClasses] = ...  % TODO return EEG and ??
-    OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrails, numTrails, ...
-                     numClasses, oddBallProb, sequenceLength, baseStartLen, ...
-                     recordingFolder, USBobj, Hz)
-% amsel TODO
-% 1) replace Hz and ??? with USBObj that will be received as parameter
-% How can I record overlapping smaples - use 2 overlapping buffers / do it
-% manually
+    OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, ...
+                    numClasses, oddBallProb, trialLength, baseStartLen, ...
+                    USBobj, Hz, eegChannels)
+% OfflineTraining - This function is responsible for offline training and
+% recording EEG data
+% INPUT:
+%   - timeBetweenTriggers - in seconds
+%   - calibrationTime - system calibration time in seconds
+%   - pauseBetweenTrials - in seconds
+%   - numTrials
+%   - numClasses - odd ball classe (e.g., 1-> only one odd ball and baseline)
+%   - oddBallProb - in [0,1]
+%   - trialLength - number of triggers in a trial
+%   - baseStartLen - number baseline triggers in the start of each trial
+%   - USBobj - Simulink object
+%   - Hz - EEG recording frequency
+%   - eegChannels - number of channels recorded (i.e., number of electordes)
 
-%% open Simulink
-% Set simulink buffer size
-trailTime = baseStartLen + sequenceLength*timeBetweenTriggers;
+% OUTPUT:
+%   EEG - EEG signal of training. shape: (# trials, # EEG channels, trial sample size) 
+%   fullTrainingVec - Triggers during training. shape: (# trials, trial length)
+%   expectedClasses - Class the subject neeeds to focus on in each trial
+%
+
+%% Setup & open Simulink
+
+% Set simulink recording buffer size
+SampleSizeObj = [USBobj '/Sample Size'];
+trailTime = baseStartLen + trialLength*timeBetweenTriggers;
 eegSampleSize = Hz*trailTime;                      
 set_param(SampleSizeObj,'siz',eegSampleSize);
 
+
+scopeObj = [USBobj '/g.SCOPE'];
 open_system(['Utillity/' USBobj])
 set_param(USBobj,'BlockReduction', 'off')       % amsel TODO WHAT Is THIS
 
@@ -20,9 +40,6 @@ Utillity.startSimulation(inf, USBobj);
 open_system(scopeObj);
 
 recordingBuffer = get_param(SampleSizeObj,'RuntimeObject');
-eegChannels = 16;
-
-
 
 %% Load Train Samples
 endTrailSound = audioread('./Sounds/');
@@ -82,12 +99,12 @@ pause(calibrationTime)
 cla
 
 %% Record trails
-fullTrainingVec = ones(numTrails, sequenceLength);
-expectedClasses = zeros(numTrails, 1);
-EEG = zeros(numTrails, eegChannels, eegSampleSize);
-for currTrail = 1:numTrails
+fullTrainingVec = ones(numTrials, trialLength);
+expectedClasses = zeros(numTrials, 1);
+EEG = zeros(numTrials, eegChannels, eegSampleSize);
+for currTrail = 1:numTrials
     % Prepare Trail
-    trainingVec = Utils.TrainingVecCreator(numClasses, oddBallProb, sequenceLength, baseStartLen);
+    trainingVec = Utils.TrainingVecCreator(numClasses, oddBallProb, trialLength, baseStartLen);
     desiredClass = round((numClasses-1)*rand);
     expectedClasses(currTrail) = desiredClass;
     fullTrainingVec(currTrail, : ) = trainingVec;
@@ -97,7 +114,7 @@ for currTrail = 1:numTrails
     pause(startingNormalTriggers)
     
     %Trail
-    for currSeq=1:sequenceLength 
+    for currSeq=1:trialLength 
         currClass = trainingVec(currSeq);
         sound(trainingSound{1, currClass}, sound_fs);  % find a way to play a sound for specific time
         pause(timeBetweenTriggers)
@@ -108,15 +125,13 @@ for currTrail = 1:numTrails
     cla
     text(0.5,0.5 ,...
         ['Finished Trail ' int2str(currTrail) sprintf('\n') ...
-         'Pausing for: ' int2str(pauseBetweenTrails) ' seconds before next trail.'], ...
+         'Pausing for: ' int2str(pauseBetweenTrials) ' seconds before next trail.'], ...
          'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
     sound(endTrailSound, sound_fs)
-    pause(pauseBetweenTrails)
+    pause(pauseBetweenTrials)
+    % Clear buffer after pause
+    recordingBuffer.OutputPort(1).Data';
     
 end
-
-
-%% Save Results
-
 
 close(MainFig)
