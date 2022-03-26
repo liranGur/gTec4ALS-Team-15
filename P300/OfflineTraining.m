@@ -1,4 +1,4 @@
-function [EEG, fullTrainingVec, expectedClasses] = ...  % TODO return EEG and ??
+function [EEG, fullTrainingVec, expectedClasses] = ... 
     OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, ...
                     numClasses, oddBallProb, trialLength, baseStartLen, ...
                     USBobj, Hz, eegChannels)
@@ -27,7 +27,7 @@ function [EEG, fullTrainingVec, expectedClasses] = ...  % TODO return EEG and ??
 
 % Set simulink recording buffer size
 SampleSizeObj = [USBobj '/Sample Size'];
-trailTime = baseStartLen + trialLength*timeBetweenTriggers;
+trailTime = trialLength*timeBetweenTriggers + 1; % Add 1 seconds as a safety buffer at the begingin of trail EEG data
 eegSampleSize = Hz*trailTime;                      
 set_param(SampleSizeObj,'siz',eegSampleSize);
 
@@ -99,6 +99,8 @@ pause(calibrationTime)
 cla
 
 %% Record trails
+preTrialPause = 2;
+
 fullTrainingVec = ones(numTrials, trialLength);
 expectedClasses = zeros(numTrials, 1);
 EEG = zeros(numTrials, eegChannels, eegSampleSize);
@@ -111,16 +113,16 @@ for currTrail = 1:numTrials
     text(0.5,0.5 ,...
         ['Starting Trail ' int2str(currTrail) sprintf('\n') 'Please count the apperances of class' classNames(desiredClass)], ...
         'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
-    pause(startingNormalTriggers)
+    pause(preTrialPause)
     
     %Trail
     for currSeq=1:trialLength 
         currClass = trainingVec(currSeq);
         sound(trainingSound{1, currClass}, sound_fs);  % find a way to play a sound for specific time
         pause(timeBetweenTriggers)
-        EEG(currTrail, :, :) = recordingBuffer.OutputPort(1).Data';
     end
     
+    EEG(currTrail, :, :) = recordingBuffer.OutputPort(1).Data';  
     % End of Trail
     cla
     text(0.5,0.5 ,...
@@ -129,8 +131,6 @@ for currTrail = 1:numTrials
          'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
     sound(endTrailSound, sound_fs)
     pause(pauseBetweenTrials)
-    % Clear buffer after pause
-    recordingBuffer.OutputPort(1).Data';
     
 end
 

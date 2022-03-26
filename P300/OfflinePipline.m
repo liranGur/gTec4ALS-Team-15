@@ -1,9 +1,13 @@
 function [] = OfflinePipline()
 % This functions starts the P300 offline training pipeline
 
+baseFolder = uigetdir('C:/Subjects/', ...
+    'Choose Desired Directory for Saving Recordings');
+
 %% Create Simulink Object
 USBobj          = 'USBamp_offline';
 IMPobj          = [USBobj '/Impedance Check'];
+
 
 %% Parameter Setting
 
@@ -12,7 +16,7 @@ IMPobj          = [USBobj '/Impedance Check'];
 
 startingNormalTriggers = 3;
 eegChannels = 16;
-recordingFolder = ['tmp' int2str(subId)];
+recordingFolder = [baseFolder int2str(subId)];
 
 
 %% Training
@@ -35,6 +39,5 @@ parametersToSave = struct('timeBetweenTriggers', timeBetweenTriggers, ...
                            'Hz', Hz);
 save(strcat(recordingFolder, 'parameters.mat'), 'parametersToSave')
 
-% PreProcess & modelsing??
 end
 
