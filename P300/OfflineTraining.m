@@ -42,10 +42,11 @@ open_system(scopeObj);
 recordingBuffer = get_param(SampleSizeObj,'RuntimeObject');
 
 %% Load Train Samples
-endTrailSound = audioread('./Sounds/');
-trainingSound{1} = audioread('./Sounds/'); % base sound
+triggerDir = './TriggersBank/Sounds1/';
+endTrailSound = audioread(strcat(triggerDir, 'idle.wmv'));
+trainingSound{1} = audioread(strcat(triggerDir, 'base.mp3')); % base sound
 for i= 1:numClasses
-    trainingSound{i+1} = audioread(strcat('../Sounds/sound_',int2str(i)));
+    trainingSound{i+1} = audioread(strcat(triggerDir, 'triger',int2str(i), '.mp3'));
 end
 sound_fs = 49920;   % sound frequency
 

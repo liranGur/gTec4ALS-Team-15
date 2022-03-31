@@ -18,7 +18,7 @@ function [EEG] = preprocessing(EEG, Hz, highLim, lowLim, down_srate)
         EEG = pop_resample(EEG, down_srate);
     end
     EEG = eeg_checkset(EEG);
-    
+end
     %Median Filtering
     %Facet Method
     
