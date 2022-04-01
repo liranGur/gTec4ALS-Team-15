@@ -25,10 +25,6 @@ function [EEG, fullTrainingVec, expectedClasses] = ...
 
 %% Setup & open Simulink
 
-
-[endTrailSound, trainingSounds] = GetTriggers(triggerBankFolder, numClasses);
-sound_fs = 49920;   % sound frequency
-
 % Set simulink recording buffer size
 SampleSizeObj = [USBobj '/Sample Size'];
 trailTime = trialLength*timeBetweenTriggers + 3; % 3 is a recording safety buffer
@@ -47,7 +43,8 @@ recordingBuffer = get_param(SampleSizeObj,'RuntimeObject');
 
 %% Load Train Samples
 
-
+[endTrailSound, trainingSounds] = GetTriggers(triggerBankFolder, numClasses);
+sound_fs = 49920;   % sound frequency
 
 classNames{1} = 'High pitch';
 classNames{2} = 'Low Pitch';
