@@ -1,7 +1,7 @@
 function [EEG, fullTrainingVec, expectedClasses] = ... 
     OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, ...
                     numClasses, oddBallProb, trialLength, baseStartLen, ...
-                    USBobj, Hz, eegChannels)
+                    USBobj, Hz, eegChannels, triggerBankFolder)
 % OfflineTraining - This function is responsible for offline training and
 % recording EEG data
 % INPUT:
@@ -25,6 +25,10 @@ function [EEG, fullTrainingVec, expectedClasses] = ...
 
 %% Setup & open Simulink
 
+
+[endTrailSound, trainingSounds] = GetTriggers(triggerBankFolder, numClasses);
+sound_fs = 49920;   % sound frequency
+
 % Set simulink recording buffer size
 SampleSizeObj = [USBobj '/Sample Size'];
 trailTime = trialLength*timeBetweenTriggers + 3; % 3 is a recording safety buffer
@@ -42,13 +46,8 @@ open_system(scopeObj);
 recordingBuffer = get_param(SampleSizeObj,'RuntimeObject');
 
 %% Load Train Samples
-triggerDir = './TriggersBank/Sounds1/';
-endTrailSound = audioread(strcat(triggerDir, 'idle.wmv'));
-trainingSound{1} = audioread(strcat(triggerDir, 'base.mp3')); % base sound
-for i= 1:numClasses
-    trainingSound{i+1} = audioread(strcat(triggerDir, 'triger',int2str(i), '.mp3'));
-end
-sound_fs = 49920;   % sound frequency
+
+
 
 classNames{1} = 'High pitch';
 classNames{2} = 'Low Pitch';
@@ -119,7 +118,7 @@ for currTrail = 1:numTrials
     %Trail
     for currSeq=1:trialLength 
         currClass = trainingVec(currSeq);
-        sound(trainingSound{1, currClass}, sound_fs);  % find a way to play a sound for specific time
+        sound(trainingSounds{1, currClass}, sound_fs);  % find a way to play a sound for specific time
         pause(timeBetweenTriggers)
     end
     
@@ -137,3 +136,28 @@ for currTrail = 1:numTrials
 end
 
 close(MainFig)
+end
+
+
+function [endTrailSound, trainingSounds] = GetTriggers(triggerBankFolder, numClasses)
+    files = dir(triggerBankFolder);
+    for idx = 1:length(files)
+        curr_name = files(idx).name;
+        if strfind(curr_name, 'end')
+            endTrailSound = audioread(strcat(triggerBankFolder,curr_name));
+        else if strfind(curr_name, 'base')
+                trainingSounds{1} = audioread(strcat(triggerBankFolder,curr_name));
+            end
+        end
+    end
+    
+    for sample_idx = 2:(numClasses+1)
+        for idx = 1:length(files)
+            curr_name = files(idx).name;
+            if strfind(curr_name,['trigger' int2str(sample_idx-1)])
+                trainingSounds{sample_idx} =  audioread(strcat(triggerBankFolder,curr_name));
+                break
+            end
+        end
+    end
+end

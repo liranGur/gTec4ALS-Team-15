@@ -12,7 +12,7 @@ IMPobj          = [USBobj '/Impedance Check'];
 %% Parameter Setting
 
 [Hz, trialLength, numClasses, subId, numTrials, timeBetweenTriggers, oddBallProb, ...
-    calibrationTime, pauseBetweenTrials] = GUIFiles.ParametersGui(IMPobj);
+    calibrationTime, pauseBetweenTrials, triggerBankFolder] = GUIFiles.ParametersGui(IMPobj);
 
 startingNormalTriggers = 3;
 eegChannels = 16;
@@ -23,7 +23,7 @@ recordingFolder = [baseFolder int2str(subId)];
 [EEG, fullTrainingVec, expectedClasses] = ...
     OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, ...
                     numClasses, oddBallProb, trialLength, startingNormalTriggers, ...
-                    USBobj, Hz, eegChannels)
+                    USBobj, Hz, eegChannels, triggerBankFolder);
 
 save(strcat(recordingFolder, 'trainingSequences.mat'), 'fullTrainingVec');
 save(strcat(recordingFolder, 'EEG.mat'), 'EEG');
