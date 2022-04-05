@@ -1,4 +1,4 @@
-function [EEG, fullTrainingVec, expectedClasses] = ... 
+function [EEG, triggersEEG, fullTrainingVec, expectedClasses] = ... 
     OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, ...
                     numClasses, oddBallProb, trialLength, baseStartLen, ...
                     USBobj, Hz, eegChannels)
@@ -27,14 +27,17 @@ function [EEG, fullTrainingVec, expectedClasses] = ...
 
 % Set simulink recording buffer size
 SampleSizeObj = [USBobj '/Sample Size'];
-trailTime = trialLength*timeBetweenTriggers + 3; % 3 is a recording safety buffer
-eegSampleSize = Hz*trailTime;                      
+pretrialSafetyBuffer = 3; % seconds to record before trial starts
+trialTime = trialLength*timeBetweenTriggers + pretrialSafetyBuffer;
+eegSampleSize = Hz*trialTime;                      
 set_param(SampleSizeObj,'siz',eegSampleSize);
+p300WindowSize = Hz*1; 
+preTrigRec = Hz*0.2; % seconds before the trigger to take
+% insert noise to time between trials
 
-
-scopeObj = [USBobj '/g.SCOPE'];                 % amsel TODO WHAT Is THIS
+scopeObj = [USBobj '/g.SCOPE'];                 % amsel TODO WHAT Is THIS - the object that shows live signal
 open_system(['Utillity/' USBobj])
-set_param(USBobj,'BlockReduction', 'off')       % amsel TODO WHAT Is THIS
+set_param(USBobj,'BlockReduction', 'off')       % amsel TODO WHAT Is THIS - some parameter
 
 Utillity.startSimulation(inf, USBobj);
 open_system(scopeObj);
@@ -42,7 +45,7 @@ open_system(scopeObj);
 recordingBuffer = get_param(SampleSizeObj,'RuntimeObject');
 
 %% Load Train Samples
-endTrailSound = audioread('./Sounds/');
+endTrialSound = audioread('./Sounds/');
 trainingSound{1} = audioread('./Sounds/'); % base sound
 for i= 1:numClasses
     trainingSound{i+1} = audioread(strcat('../Sounds/sound_',int2str(i)));
@@ -98,41 +101,54 @@ pause(calibrationTime)
 % Clear axis
 cla
 
-%% Record trails
+%% Record trials
 preTrialPause = 2;
 
 fullTrainingVec = ones(numTrials, trialLength);
 expectedClasses = zeros(numTrials, 1);
 EEG = zeros(numTrials, eegChannels, eegSampleSize);
-for currTrail = 1:numTrials
-    % Prepare Trail
+triggersEEG = zeros(numTrials, trialLength, eegChannels, p300WindowSize);
+trigTS = zeros(trialLength,1); % triggers' timestamps
+for i = 1:trialLength
+    trigTS(i) = pretrialSafetyBuffer + (i-1)*timeBetweenTriggers;
+end
+
+for currTrial = 1:numTrials
+    % Prepare Trial
     trainingVec = Utils.TrainingVecCreator(numClasses, oddBallProb, trialLength, baseStartLen);
-    desiredClass = round((numClasses-1)*rand);
-    expectedClasses(currTrail) = desiredClass;
-    fullTrainingVec(currTrail, : ) = trainingVec;
+    desiredClass = round((numClasses-1)*rand); % $ what this?
+    expectedClasses(currTrial) = desiredClass;
+    fullTrainingVec(currTrial, : ) = trainingVec;
     text(0.5,0.5 ,...
-        ['Starting Trail ' int2str(currTrail) sprintf('\n') 'Please count the apperances of class' classNames(desiredClass)], ...
+        ['Starting Trial ' int2str(currTrial) sprintf('\n') 'Please count the apperances of class' classNames(desiredClass)], ...
         'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
     pause(preTrialPause)
     
-    %Trail
+    % Trial - play triggers
     for currSeq=1:trialLength 
         currClass = trainingVec(currSeq);
         sound(trainingSound{1, currClass}, sound_fs);  % find a way to play a sound for specific time
         pause(timeBetweenTriggers)
     end
     
-    % End of Trail
+    % End of Trial
     cla
     text(0.5,0.5 ,...
-        ['Finished Trail ' int2str(currTrail) sprintf('\n') ...
-         'Pausing for: ' int2str(pauseBetweenTrials) ' seconds before next trail.'], ...
+        ['Finished Trial ' int2str(currTrial) sprintf('\n') ...
+         'Pausing for: ' int2str(pauseBetweenTrials) ' seconds before next trial.'], ...
          'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
-    sound(endTrailSound, sound_fs)
+    sound(endTrialSound, sound_fs)
     pause(0.5)  % pausing as a safety buffer for final trigger recording in EEG
-    EEG(currTrail, :, :) = recordingBuffer.OutputPort(1).Data';  
-    pause(pauseBetweenTrials)
+    EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
     
+    % Extract triggers [not tested]
+    for trig = 1:trialLength
+        trigWindowStart = Hz*(trigTS(trig)-preTrigRec);
+        triggersEEG(currTrial,trig,:,:) = EEG(currTrial, :, trigWindowStart:(trigWindowStart+p300WindowSize-1)); 
+    end
+
+    pause(pauseBetweenTrials)
 end
+
 
 close(MainFig)
