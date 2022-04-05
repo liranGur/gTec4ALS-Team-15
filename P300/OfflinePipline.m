@@ -6,13 +6,18 @@ baseFolder = uigetdir('C:/Subjects/', ...
 
 %% Create Simulink Object
 USBobj          = 'USBamp_offline';
+AMPobj          = [USBobj '/g.USBamp UB-2016.03.01'];
 IMPobj          = [USBobj '/Impedance Check'];
-
+% RestDelayobj    = [USBobj '/Resting Delay'];
+% ChunkDelayobj   = [USBobj '/Chunk Delay'];
+% scopeObj        = [USBobj '/g.SCOPE'];
+% load_system(['GUIFiles/' USBobj])
+% set_param(USBobj,'BlockReduction', 'off')
 
 %% Parameter Setting
 
 [Hz, trialLength, numClasses, subId, numTrials, timeBetweenTriggers, oddBallProb, ...
-    calibrationTime, pauseBetweenTrials] = GUIFiles.ParametersGui(IMPobj);
+    calibrationTime, pauseBetweenTrials, triggerBankFolder] = GUIFiles.ParametersGui(USBobj, IMPobj);
 
 startingNormalTriggers = 3;
 eegChannels = 16;
@@ -23,7 +28,7 @@ recordingFolder = [baseFolder int2str(subId)];
 [EEG, fullTrainingVec, expectedClasses] = ...
     OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, ...
                     numClasses, oddBallProb, trialLength, startingNormalTriggers, ...
-                    USBobj, Hz, eegChannels)
+                    Hz, eegChannels, triggerBankFolder);
 
 save(strcat(recordingFolder, 'trainingSequences.mat'), 'fullTrainingVec');
 save(strcat(recordingFolder, 'EEG.mat'), 'EEG');

@@ -1,7 +1,7 @@
 function [EEG, triggersEEG, fullTrainingVec, expectedClasses] = ... 
     OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, ...
                     numClasses, oddBallProb, trialLength, baseStartLen, ...
-                    USBobj, Hz, eegChannels)
+                    Hz, eegChannels, triggerBankFolder)
 % OfflineTraining - This function is responsible for offline training and
 % recording EEG data
 % INPUT:
@@ -25,12 +25,22 @@ function [EEG, triggersEEG, fullTrainingVec, expectedClasses] = ...
 
 %% Setup & open Simulink
 
+USBobj          = 'USBamp_offline';
+AMPobj          = [USBobj '/g.USBamp UB-2016.03.01'];
+IMPobj          = [USBobj '/Impedance Check'];
+scopeObj        = [USBobj '/g.SCOPE'];
+
+% open Simulink
+open_system(['GUIFiles/' USBobj])
+set_param(USBobj,'BlockReduction', 'off')
+
+
 % Set simulink recording buffer size
-SampleSizeObj = [USBobj '/Sample Size'];
+SampleSizeObj = [USBobj '/Chunk Delay'];
 pretrialSafetyBuffer = 3; % seconds to record before trial starts
 trialTime = trialLength*timeBetweenTriggers + pretrialSafetyBuffer;
-eegSampleSize = Hz*trialTime;                      
-set_param(SampleSizeObj,'siz',eegSampleSize);
+eegSampleSize = Hz*trialTime; 
+set_param(SampleSizeObj,'siz',num2str(eegSampleSize));
 p300WindowSize = Hz*1; 
 preTrigRec = Hz*0.2; % seconds before the trigger to take
 % insert noise to time between trials
@@ -39,17 +49,16 @@ scopeObj = [USBobj '/g.SCOPE'];                 % amsel TODO WHAT Is THIS - the 
 open_system(['Utillity/' USBobj])
 set_param(USBobj,'BlockReduction', 'off')       % amsel TODO WHAT Is THIS - some parameter
 
-Utillity.startSimulation(inf, USBobj);
+Utils.startSimulation(inf, USBobj);
+
 open_system(scopeObj);
 
 recordingBuffer = get_param(SampleSizeObj,'RuntimeObject');
 
 %% Load Train Samples
-endTrialSound = audioread('./Sounds/');
-trainingSound{1} = audioread('./Sounds/'); % base sound
-for i= 1:numClasses
-    trainingSound{i+1} = audioread(strcat('../Sounds/sound_',int2str(i)));
-end
+
+[endTrailSound, trainingSounds] = GetTriggers(triggerBankFolder, numClasses);
+
 sound_fs = 49920;   % sound frequency
 
 classNames{1} = 'High pitch';
@@ -127,7 +136,7 @@ for currTrial = 1:numTrials
     % Trial - play triggers
     for currSeq=1:trialLength 
         currClass = trainingVec(currSeq);
-        sound(trainingSound{1, currClass}, sound_fs);  % find a way to play a sound for specific time
+        sound(trainingSounds{1, currClass}, sound_fs);  % find a way to play a sound for specific time
         pause(timeBetweenTriggers)
     end
     
@@ -150,5 +159,29 @@ for currTrial = 1:numTrials
     pause(pauseBetweenTrials)
 end
 
-
 close(MainFig)
+end
+
+
+function [endTrailSound, trainingSounds] = GetTriggers(triggerBankFolder, numClasses)
+    files = dir(triggerBankFolder);
+    for idx = 1:length(files)
+        curr_name = files(idx).name;
+        if strfind(curr_name, 'end')
+            endTrailSound = audioread(strcat(triggerBankFolder,curr_name));
+        else if strfind(curr_name, 'base')
+                trainingSounds{1} = audioread(strcat(triggerBankFolder,curr_name));
+            end
+        end
+    end
+    
+    for sample_idx = 2:(numClasses+1)
+        for idx = 1:length(files)
+            curr_name = files(idx).name;
+            if strfind(curr_name,['trigger' int2str(sample_idx-1)])
+                trainingSounds{sample_idx} =  audioread(strcat(triggerBankFolder,curr_name));
+                break
+            end
+        end
+    end
+end
