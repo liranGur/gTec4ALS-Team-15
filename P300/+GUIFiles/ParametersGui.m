@@ -1,5 +1,5 @@
 function [Hz, trialLength, numClasses, subId, numTrials, timeBetweenTriggers, oddBallProb, ...
-    calibrationTime, pauseBetweenTrials, triggerBank] = ParametersGui(IMPobj)
+    calibrationTime, pauseBetweenTrials, triggerBank] = ParametersGui(USBObj, IMPObj)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -102,7 +102,7 @@ GUI.Hz    = uicontrol('style','popupmenu',...
 
 %% Callbacks
 triggerBank{1}= './TriggersBank/Sounds1/';
-set(GUI.Imp,'callback',{@GUIFiles.OpenImpedanceCallback,IMPobj});
+set(GUI.Imp,'callback',{@GUIFiles.OpenImpedanceCallback,USBObj,IMPObj});
 set(GUI.bank,'callback',{@GUIFiles.SelectTriggerBankCallback,triggerBank})
 
 % This function is needed because I couldn't call uiresume as a direct

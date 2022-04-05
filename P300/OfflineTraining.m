@@ -1,7 +1,7 @@
 function [EEG, fullTrainingVec, expectedClasses] = ... 
     OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, ...
                     numClasses, oddBallProb, trialLength, baseStartLen, ...
-                    USBobj, Hz, eegChannels, triggerBankFolder)
+                    Hz, eegChannels, triggerBankFolder)
 % OfflineTraining - This function is responsible for offline training and
 % recording EEG data
 % INPUT:
@@ -25,18 +25,24 @@ function [EEG, fullTrainingVec, expectedClasses] = ...
 
 %% Setup & open Simulink
 
+USBobj          = 'USBamp_offline';
+AMPobj          = [USBobj '/g.USBamp UB-2016.03.01'];
+IMPobj          = [USBobj '/Impedance Check'];
+scopeObj        = [USBobj '/g.SCOPE'];
+
+% open Simulink
+open_system(['GUIFiles/' USBobj])
+set_param(USBobj,'BlockReduction', 'off')
+
+
 % Set simulink recording buffer size
-SampleSizeObj = [USBobj '/Sample Size'];
+SampleSizeObj = [USBobj '/Chunk Delay'];
 trailTime = trialLength*timeBetweenTriggers + 3; % 3 is a recording safety buffer
-eegSampleSize = Hz*trailTime;                      
+eegSampleSize =num2str(Hz*trailTime);
 set_param(SampleSizeObj,'siz',eegSampleSize);
 
 
-scopeObj = [USBobj '/g.SCOPE'];                 % amsel TODO WHAT Is THIS
-open_system(['Utillity/' USBobj])
-set_param(USBobj,'BlockReduction', 'off')       % amsel TODO WHAT Is THIS
-
-Utillity.startSimulation(inf, USBobj);
+Utils.startSimulation(inf, USBobj);
 open_system(scopeObj);
 
 recordingBuffer = get_param(SampleSizeObj,'RuntimeObject');
@@ -100,7 +106,7 @@ preTrialPause = 2;
 
 fullTrainingVec = ones(numTrials, trialLength);
 expectedClasses = zeros(numTrials, 1);
-EEG = zeros(numTrials, eegChannels, eegSampleSize);
+EEG = zeros(numTrials, eegChannels, str2double(eegSampleSize));
 for currTrail = 1:numTrials
     % Prepare Trail
     trainingVec = Utils.TrainingVecCreator(numClasses, oddBallProb, trialLength, baseStartLen);
