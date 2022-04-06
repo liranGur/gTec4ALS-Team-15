@@ -23,26 +23,10 @@ function [EEG, fullTrainingVec, expectedClasses] = ...
 %   expectedClasses - Class the subject neeeds to focus on in each trial
 %
 
-%% Setup & open Simulink
 
-[usbObj, scopeObj, impObj, ampObj] = Utils.CreateSimulinkObj();
+preTrialPause = 2;
 
-% open Simulink
-open_system(['GUIFiles/' USBobj])
-
-set_param(ampObj, 'Hz', num2str(Hz));           % TODO check how hz is configured in slx
-
-% Set simulink recording buffer size
-SampleSizeObj = [USBobj '/Chunk Delay'];        % Todo try to change this name
-pretrialSafetyBuffer = 3;                       % seconds to record before trial starts
-trialTime = triggersInTrial*timeBetweenTriggers + pretrialSafetyBuffer;
-eegSampleSize = Hz*trialTime; 
-set_param(SampleSizeObj,'siz',num2str(eegSampleSize));
-
-Utils.startSimulation(inf, usbObj);
-open_system(scopeObj);
-
-recordingBuffer = get_param(SampleSizeObj,'RuntimeObject');
+recordingBuffer = setUpRecordingSimulink(Hz,  triggersInTrial, timeBetweenTriggers);
 
 %% Load Train Samples
 
@@ -54,41 +38,11 @@ classNames{1} = 'High pitch';
 classNames{2} = 'Low Pitch';
 classNames{3} = 'What now';
 
-%% Display Setup
-% Checking monitor position and number of monitors
-monitorPos = get(0,'MonitorPositions');
-monitorN = size(monitorPos, 1);
-% Which monitor to use TODO: make a parameter
-choosenMonitor = 1;
-% If no 2nd monitor found, use the main monitor
-if choosenMonitor < monitorN
-    choosenMonitor = 1;
-    disp('Another monitored is not detected, using main monitor')
-end
-% Get choosen monitor position
-figurePos = monitorPos(choosenMonitor, :);
 
-% Open full screen monitor
-figure('outerPosition',figurePos);
-
-% get the figure and axes handles
-MainFig = gcf;
-hAx  = gca;
-
-% set the axes to full screen
-set(hAx,'Unit','normalized','Position',[0 0 1 1]);
-% hide the toolbar
-set(MainFig,'menubar','none')
-% to hide the title
-set(MainFig,'NumberTitle','off');
-% Set background color
-set(hAx,'color', 'black');
-% Lock axes limits
-hAx.XLim = [0, 1];
-hAx.YLim = [0, 1];
-hold on
 
 %% Callibrate System
+
+Utils.DisplaySetUp();
 
 % Show a message that declares that training is about to begin
 text(0.5,0.5 ,...
@@ -100,7 +54,7 @@ pause(calibrationTime)
 cla
 
 %% Record trials
-preTrialPause = 2;
+
 
 fullTrainingVec = ones(numTrials, triggersInTrial);
 expectedClasses = zeros(numTrials, 1);
@@ -162,4 +116,26 @@ function [endTrailSound, trainingSounds] = GetTriggers(triggerBankFolder, numCla
             end
         end
     end
+end
+
+
+function [recordingBuffer] = setUpRecordingSimulink(Hz, triggersInTrial, timeBetweenTriggers) 
+    [usbObj, scopeObj, impObj, ampObj] = Utils.CreateSimulinkObj();
+
+    % open Simulink
+    open_system(['GUIFiles/' usbObj])
+
+    set_param(ampObj, 'Hz', num2str(Hz));           % TODO check how hz is configured in slx
+
+    % Set simulink recording buffer size
+    SampleSizeObj = [usbObj '/Chunk Delay'];        % Todo try to change this name
+    pretrialSafetyBuffer = 3;                       % seconds to record before trial starts
+    trialTime = triggersInTrial*timeBetweenTriggers + pretrialSafetyBuffer;
+    eegSampleSize = Hz*trialTime; 
+    set_param(SampleSizeObj,'siz',num2str(eegSampleSize));
+
+    Utils.startSimulation(inf, usbObj);
+    open_system(scopeObj);
+
+    recordingBuffer = get_param(SampleSizeObj,'RuntimeObject');
 end
