@@ -4,25 +4,13 @@ function [] = OfflinePipline()
 baseFolder = uigetdir('C:/Subjects/', ...
     'Choose Desired Directory for Saving Recordings');
 
-%% Create Simulink Object
-USBobj          = 'USBamp_offline';
-AMPobj          = [USBobj '/g.USBamp UB-2016.03.01'];
-IMPobj          = [USBobj '/Impedance Check'];
-% RestDelayobj    = [USBobj '/Resting Delay'];
-% ChunkDelayobj   = [USBobj '/Chunk Delay'];
-% scopeObj        = [USBobj '/g.SCOPE'];
-% load_system(['GUIFiles/' USBobj])
-% set_param(USBobj,'BlockReduction', 'off')
-
-%% Parameter Setting
-
+%% Recording Parameter Setting
 [Hz, triggersInTrial, numClasses, subId, numTrials, timeBetweenTriggers, oddBallProb, ...
-    calibrationTime, pauseBetweenTrials, triggerBankFolder] = GUIFiles.ParametersGui(USBobj, IMPobj);
+    calibrationTime, pauseBetweenTrials, triggerBankFolder] = GUIFiles.ParametersGui();
 
 startingNormalTriggers = 3;
 eegChannels = 16;
 recordingFolder = [baseFolder int2str(subId)];
-
 
 %% Training
 [EEG, fullTrainingVec, expectedClasses] = ...
@@ -46,11 +34,13 @@ save(strcat(recordingFolder, 'parameters.mat'), 'parametersToSave')
 
 
 %% PreProcessing
+
 highLim = 100;
 lowLim = 0;
 downSampleRate = 50;
 triggerWindowTime = 1;
 preTriggerRecTime = 0.2;
+
 processedEEG = preprocessing(EEG, Hz, highLim, lowLim, downSampleRate, triggersInTrial, triggerWindowTime, ...
                              numChannles, preTriggerRecTime, timeBetweenTriggers);
 

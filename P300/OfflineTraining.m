@@ -25,29 +25,21 @@ function [EEG, fullTrainingVec, expectedClasses] = ...
 
 %% Setup & open Simulink
 
-USBobj          = 'USBamp_offline';
-AMPobj          = [USBobj '/g.USBamp UB-2016.03.01'];
-IMPobj          = [USBobj '/Impedance Check'];
-scopeObj        = [USBobj '/g.SCOPE'];
+[usbObj, scopeObj, impObj, ampObj] = Utils.CreateSimulinkObj();
 
 % open Simulink
 open_system(['GUIFiles/' USBobj])
-set_param(USBobj,'BlockReduction', 'off')
 
+set_param(ampObj, 'Hz', num2str(Hz));           % TODO check how hz is configured in slx
 
 % Set simulink recording buffer size
-SampleSizeObj = [USBobj '/Chunk Delay'];
-pretrialSafetyBuffer = 3; % seconds to record before trial starts
+SampleSizeObj = [USBobj '/Chunk Delay'];        % Todo try to change this name
+pretrialSafetyBuffer = 3;                       % seconds to record before trial starts
 trialTime = triggersInTrial*timeBetweenTriggers + pretrialSafetyBuffer;
 eegSampleSize = Hz*trialTime; 
 set_param(SampleSizeObj,'siz',num2str(eegSampleSize));
 
-scopeObj = [USBobj '/g.SCOPE'];                 % amsel TODO WHAT Is THIS - the object that shows live signal
-open_system(['Utillity/' USBobj])
-set_param(USBobj,'BlockReduction', 'off')       % amsel TODO WHAT Is THIS - some parameter
-
-Utils.startSimulation(inf, USBobj);
-
+Utils.startSimulation(inf, usbObj);
 open_system(scopeObj);
 
 recordingBuffer = get_param(SampleSizeObj,'RuntimeObject');
