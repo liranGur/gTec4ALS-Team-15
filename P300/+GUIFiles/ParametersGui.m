@@ -102,7 +102,7 @@ GUI.Hz    = uicontrol('style','popupmenu',...
 
 %% Callbacks
 triggerBank{1}= './TriggersBank/Sounds1/';
-set(GUI.Imp,'callback',{@GUIFiles.OpenImpedanceCallback,usbObj,impObj});
+set(GUI.Imp,'callback',{@GUIFiles.OpenImpedanceCallback});
 set(GUI.bank,'callback',{@GUIFiles.SelectTriggerBankCallback,triggerBank})
 
 % This function is needed because I couldn't call uiresume as a direct
@@ -124,9 +124,9 @@ numClasses = str2double(GUI.nCls.String);
 subId = str2double(GUI.subID.String);
 numTrials = str2double(GUI.nTrial.String);
 timeBetweenTriggers = str2double(GUI.timeBetweenTriggers.String);
-oddBallProb = str2double(GUI.oddBallProb);
-calibrationTime = str2double(GUI.calibrationTime);
-pauseBetweenTrials = str2double(GUI.pauseBetweenTrials);
+oddBallProb = str2double(GUI.oddBallProb.String);
+calibrationTime = str2double(GUI.calibrationTime.String);
+pauseBetweenTrials = str2double(GUI.pauseBetweenTrials.String);
 triggerBank = triggerBank{1};
 
 close(GUI.fh);

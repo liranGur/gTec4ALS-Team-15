@@ -26,7 +26,11 @@ function [EEG, fullTrainingVec, expectedClasses] = ...
 
 preTrialPause = 2;
 
-recordingBuffer = setUpRecordingSimulink(Hz,  triggersInTrial, timeBetweenTriggers);
+pretrialSafetyBuffer = 3;                       % seconds to record before trial starts
+trialTime = triggersInTrial*timeBetweenTriggers + pretrialSafetyBuffer;
+eegSampleSize = Hz*trialTime; 
+
+recordingBuffer = setUpRecordingSimulink(Hz,  triggersInTrial, timeBetweenTriggers, eegSampleSize);
 
 %% Load Train Samples
 
@@ -72,8 +76,8 @@ for currTrial = 1:numTrials
     pause(preTrialPause)
     
     % Trial - play triggers
-    for currSeq=1:triggersInTrial 
-        currClass = trainingVec(currSeq);
+    for currTrigger=1:triggersInTrial 
+        currClass = trainingVec(currTrigger);
         sound(trainingSounds{1, currClass}, sound_fs);  % find a way to play a sound for specific time
         pause(timeBetweenTriggers)
     end
@@ -119,7 +123,7 @@ function [endTrailSound, trainingSounds] = GetTriggers(triggerBankFolder, numCla
 end
 
 
-function [recordingBuffer] = setUpRecordingSimulink(Hz, triggersInTrial, timeBetweenTriggers) 
+function [recordingBuffer] = setUpRecordingSimulink(Hz, triggersInTrial, timeBetweenTriggers, eegSampleSize) 
     [usbObj, scopeObj, impObj, ampObj] = Utils.CreateSimulinkObj();
 
     % open Simulink
@@ -127,11 +131,8 @@ function [recordingBuffer] = setUpRecordingSimulink(Hz, triggersInTrial, timeBet
 
     set_param(ampObj, 'Hz', num2str(Hz));           % TODO check how hz is configured in slx
 
-    % Set simulink recording buffer size
+    % Set simulink recording buffer size 
     SampleSizeObj = [usbObj '/Chunk Delay'];        % Todo try to change this name
-    pretrialSafetyBuffer = 3;                       % seconds to record before trial starts
-    trialTime = triggersInTrial*timeBetweenTriggers + pretrialSafetyBuffer;
-    eegSampleSize = Hz*trialTime; 
     set_param(SampleSizeObj,'siz',num2str(eegSampleSize));
 
     Utils.startSimulation(inf, usbObj);
