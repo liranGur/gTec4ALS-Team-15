@@ -3,8 +3,12 @@ function [EEG] = preprocessing(EEG, Hz, highLim, lowLim, down_srate, ...,
     
     EEG = split_trials(EEG, triggersInTrial, Hz, windowTime, numChannles, ...
                        timeBeforeTriggerToTake, timeBetweenTriggers);
-    EEG = low_pass(EEG, highLim);
-    EEG = high_pass(EEG,lowLim);
+    EEG = pop_eegfiltnew(EEG, 'hicutoff',highLim,'plotfreqz',1); % low pass
+    EEG = pop_eegfiltnew(EEG, 'locutoff',lowLim,'plotfreqz',1);  % high pass
+    % downsample
+    if Hz > down_srate
+        EEG = pop_resample(EEG, down_srate);
+    end
     
 %     %Zero-phase digital filtering
 %     EEG = filtfilt(EEG,b,a); %ask Ophir
@@ -44,25 +48,6 @@ function [res] = split_trials(EEG, triggersInTrial, Hz, windowTime, numChannles,
         end
     end
     
-end
-
-function [res] = low_pass(EEG, highLim)
-    res = pop_eegfiltnew(EEG, 'hicutoff',highLim,'plotfreqz',1);    % removes data above
-%     res = eeg_checkset(res);
-end
-
-function [res] = high_pass(EEG, lowLim)
-    res = pop_eegfiltnew(EEG, 'locutoff',lowLim,'plotfreqz',1);     % removes data under
-%     res = eeg_checkset(res);
-end
-
-function [res] = down_sample(EEG, down_srate, Hz)
-    if Hz > down_srate
-        res = pop_resample(EEG, down_srate);
-%         res = eeg_checkset(res);
-    else
-        res = EEG;
-    end
 end
     
    
