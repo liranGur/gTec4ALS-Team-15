@@ -30,7 +30,7 @@ pretrialSafetyBuffer = 3;                       % seconds to record before trial
 trialTime = triggersInTrial*timeBetweenTriggers + pretrialSafetyBuffer;
 eegSampleSize = Hz*trialTime; 
 
-recordingBuffer = setUpRecordingSimulink(Hz,  triggersInTrial, timeBetweenTriggers, eegSampleSize);
+recordingBuffer = setUpRecordingSimulink(Hz, eegSampleSize);
 
 %% Load Train Samples
 
@@ -123,7 +123,7 @@ function [endTrailSound, trainingSounds] = GetTriggers(triggerBankFolder, numCla
 end
 
 
-function [recordingBuffer] = setUpRecordingSimulink(Hz, triggersInTrial, timeBetweenTriggers, eegSampleSize) 
+function [recordingBuffer] = setUpRecordingSimulink(Hz, eegSampleSize) 
     [usbObj, scopeObj, impObj, ampObj] = Utils.CreateSimulinkObj();
 
     % open Simulink
