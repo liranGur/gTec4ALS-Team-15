@@ -1,4 +1,4 @@
-function [trainingVec] = AudioTrainingVecCreator(numClasses, oddBallProb, sequenceLength, baseStartLen)
+function [trainingVec] = TrainingVecCreator(numClasses, oddBallProb, sequenceLength, baseStartLen)
 %TRAININGVECCREATOR Create labels for training vector
 % numClasses 
 % oddBallProb - probability of the odd ball classes
@@ -21,7 +21,7 @@ while currClass < numClasses + 2
             currClassAmount = currClassAmount + 1;
             trainingVec(i) = currClass;
         end
-        if currClassAmount > perClassAmount
+        if currClassAmount >= perClassAmount
             currClass = currClass + 1;
             currClassAmount = 0;
             currClassRuns = 0;

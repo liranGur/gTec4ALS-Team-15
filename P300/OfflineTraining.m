@@ -62,12 +62,17 @@ EEG = zeros(numTrials, eegChannels, eegSampleSize);
 for currTrial = 1:numTrials
     % Prepare Trial
     trainingVec = Utils.TrainingVecCreator(numClasses, oddBallProb, triggersInTrial, baseStartLen);
-    targetClass = round((numClasses-1)*rand);
+    assert(all(trainingVec <= (numClasses + 1)), 'Sanity check training Vector')
+    targetClass = round((numClasses-1)*rand) + 2;
     expectedClasses(currTrial) = targetClass;
+    assert(targetClass > 1 & targetClass <= (numClasses+1), 'Sanity check target class')
     fullTrainingVec(currTrial, : ) = trainingVec;
+    
+    cla
     text(0.5,0.5 ,...
-        ['Starting Trial ' int2str(currTrial) sprintf('\n') 'Please count the apperances of class' classNames(targetClass)], ...
-        'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
+        ['Starting Trial ' int2str(currTrial) sprintf('\n') ...
+         'Please count the apperances of class' sprintf('\n') classNames(targetClass)], ...
+         'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
     pause(preTrialPause)
     
     % Show base image for a few seconds before start
@@ -83,7 +88,7 @@ for currTrial = 1:numTrials
     for currTrigger=1:triggersInTrial 
         currClass = trainingVec(currTrigger);
         activateTrigger(trainingSamples, currClass)
-        pause(timeBetweenTriggers)
+        pause(timeBetweenTriggers + rand*0.5)  % use random time diff between triggers
     end
     
     % End of Trial
@@ -98,7 +103,7 @@ for currTrial = 1:numTrials
     end
      
     pause(0.5)  % pausing as a safety buffer for final trigger recording in EEG
-    EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
+%     EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
 
     pause(pauseBetweenTrials)
 end
@@ -124,6 +129,7 @@ function [trainingSamples, diffTrigger, classNames] = loadTrainingSamples(trigge
     end
     file_names = sort(file_names);
     file_names = file_names(3:length(file_names));  % remove . & .. from names
+    classNames{1} = 'baseline';
     
     diffTrigger = load_func(strcat(triggerBankFolder, '\', file_names(1)));
     for i=2:length(file_names)
@@ -161,14 +167,16 @@ end
 
 function activateVisualTrigger(trainingImages, idx)
     cla
-%     imshow('C:\Ariel\Files\BCI4ALS\gTec4ALS-Team-15\P300\TriggersBank\visual-3-classes\diff_noname.jpg')
-    image(flip(trainingImages{idx}, 1), 'XData', [0.25, 0.75],...
-        'YData', [0.25, 0.75 * ...
-        size(trainingImages{idx},1)./ size(trainingImages{idx},2)])
+%     imshow(trainingImages{idx})
+%     imshow('C:\Ariel\Files\BCI4ALS\gTec4ALS-Team-15\P300\TriggersBank\visual-3-classes\base.jpg', ...
+%             'Border','tight')
+    image(flip(trainingImages{idx}, 1), ...
+          'XData', [0.25, 0.75],...
+          'YData', [0.25, 0.75 * ...
+          size(trainingImages{idx},1)./ size(trainingImages{idx},2)])
 end
 
 function activateAudioTrigger(trainingSounds, idx)
-    sound_fs = 4096;
     sound(trainingSounds{1, idx}, getSoundFs());
 end
 
