@@ -13,8 +13,6 @@ function [EEG] = preprocessing(EEG, Hz, highLim, lowLim, down_srate, ...,
 %     %Zero-phase digital filtering
 %     EEG = filtfilt(EEG,b,a); %ask Ophir
 %     EEG = eeg_checkset(EEG);
-
-    EEG = down_sample(EEG, down_srate, Hz);
 end
     %Median Filtering
     %Facet Method

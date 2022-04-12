@@ -1,4 +1,4 @@
-function [EEG, fullTrainingVec, expectedClasses] = ... 
+function [EEG, fullTrainingVec, expectedClasses, triggersTime] = ... 
     OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, ...
                     numClasses, oddBallProb, triggersInTrial, baseStartLen, ...
                     Hz, eegChannels, triggerBankFolder, is_visual)
@@ -25,6 +25,7 @@ function [EEG, fullTrainingVec, expectedClasses] = ...
 
 
 preTrialPause = 2;
+maxRandomTimeBetweenTriggers = 0.3;
 
 pretrialSafetyBuffer = 3;                       % seconds to record before trial starts
 trialTime = triggersInTrial*timeBetweenTriggers + pretrialSafetyBuffer;
@@ -37,7 +38,8 @@ eegSampleSize = Hz*trialTime;
 
 %% Callibrate System
 
-Utils.DisplaySetUp();
+% Utils.DisplaySetUp();
+figure()
 
 % Show a message that declares that training is about to begin
 text(0.5,0.5 ,...
@@ -58,6 +60,7 @@ end
 fullTrainingVec = ones(numTrials, triggersInTrial);
 expectedClasses = zeros(numTrials, 1);
 EEG = zeros(numTrials, eegChannels, eegSampleSize);
+triggersTime = zeros(numTrials, (triggersInTrial + 1));
 
 for currTrial = 1:numTrials
     % Prepare Trial
@@ -78,17 +81,18 @@ for currTrial = 1:numTrials
     % Show base image for a few seconds before start
     if is_visual
         cla
-        image(flip(diffTrigger, 1), 'XData', [0.25, 0.75],...
-        'YData', [0.25, 0.75 * ...
-        size(diffTrigger ,1)./ size(diffTrigger,2)])
+        image(flip(diffTrigger, 1))
         pause(3);
     end    
     
+    % add zero time
+    triggersTime(currTrial, 1) = now;
     % Trial - play triggers
     for currTrigger=1:triggersInTrial 
         currClass = trainingVec(currTrigger);
         activateTrigger(trainingSamples, currClass)
-        pause(timeBetweenTriggers + rand*0.5)  % use random time diff between triggers
+        triggerTime(currTrial, currTrigger+1) = now
+        pause(timeBetweenTriggers + rand*maxRandomTimeBetweenTriggers)  % use random time diff between triggers
     end
     
     % End of Trial
@@ -170,10 +174,7 @@ function activateVisualTrigger(trainingImages, idx)
 %     imshow(trainingImages{idx})
 %     imshow('C:\Ariel\Files\BCI4ALS\gTec4ALS-Team-15\P300\TriggersBank\visual-3-classes\base.jpg', ...
 %             'Border','tight')
-    image(flip(trainingImages{idx}, 1), ...
-          'XData', [0.25, 0.75],...
-          'YData', [0.25, 0.75 * ...
-          size(trainingImages{idx},1)./ size(trainingImages{idx},2)])
+    imshow(flip(trainingImages{idx}, 1))
 end
 
 function activateAudioTrigger(trainingSounds, idx)
