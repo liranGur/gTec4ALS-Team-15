@@ -1,7 +1,7 @@
 function [EEG, fullTrainingVec, expectedClasses] = ... 
     OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, ...
                     numClasses, oddBallProb, triggersInTrial, baseStartLen, ...
-                    Hz, eegChannels, triggerBankFolder)
+                    Hz, eegChannels, triggerBankFolder, is_visual)
 % OfflineTraining - This function is responsible for offline training and
 % recording EEG data
 % INPUT:
@@ -30,19 +30,10 @@ pretrialSafetyBuffer = 3;                       % seconds to record before trial
 trialTime = triggersInTrial*timeBetweenTriggers + pretrialSafetyBuffer;
 eegSampleSize = Hz*trialTime; 
 
-recordingBuffer = setUpRecordingSimulink(Hz, eegSampleSize);
+% recordingBuffer = setUpRecordingSimulink(Hz, eegSampleSize);
 
 %% Load Train Samples
-
-[endTrialSound, trainingSounds] = GetTriggers(triggerBankFolder, numClasses);
-
-sound_fs = 49920;   % sound frequency
-
-classNames{1} = 'High pitch';
-classNames{2} = 'Low Pitch';
-classNames{3} = 'What now';
-
-
+[trainingSamples, diffTrigger, classNames] = loadTrainingSamples(triggerBankFolder, is_visual);
 
 %% Callibrate System
 
@@ -58,7 +49,11 @@ pause(calibrationTime)
 cla
 
 %% Record trials
-
+if is_visual
+    activateTrigger = @activateVisualTrigger;
+else
+    activateTrigger = @activateAudioTrigger;
+end
 
 fullTrainingVec = ones(numTrials, triggersInTrial);
 expectedClasses = zeros(numTrials, 1);
@@ -66,19 +61,28 @@ EEG = zeros(numTrials, eegChannels, eegSampleSize);
 
 for currTrial = 1:numTrials
     % Prepare Trial
-    trainingVec = Utils.TrainingVecCreator(numClasses, oddBallProb, triggersInTrial, baseStartLen);
-    desiredClass = round((numClasses-1)*rand); % $ what this?
-    expectedClasses(currTrial) = desiredClass;
+    trainingVec = Utils.TrainingVecCreator(numClasses, oddBallProb, triggersInTrial, baseStartLen);  % This also needs to be updated
+    targetClass = round((numClasses-1)*rand);
+    expectedClasses(currTrial) = targetClass;
     fullTrainingVec(currTrial, : ) = trainingVec;
     text(0.5,0.5 ,...
-        ['Starting Trial ' int2str(currTrial) sprintf('\n') 'Please count the apperances of class' classNames(desiredClass)], ...
+        ['Starting Trial ' int2str(currTrial) sprintf('\n') 'Please count the apperances of class' classNames(targetClass)], ...
         'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
     pause(preTrialPause)
+    
+    % Show base image for a few seconds before start
+    if is_visual
+        cla
+        image(flip(diffTrigger, 1), 'XData', [0.25, 0.75],...
+        'YData', [0.25, 0.75 * ...
+        size(diffTrigger ,1)./ size(diffTrigger,2)])
+        pause(3);
+    end    
     
     % Trial - play triggers
     for currTrigger=1:triggersInTrial 
         currClass = trainingVec(currTrigger);
-        sound(trainingSounds{1, currClass}, sound_fs);  % find a way to play a sound for specific time
+        activateTrigger(trainingSamples, currClass)
         pause(timeBetweenTriggers)
     end
     
@@ -88,7 +92,11 @@ for currTrial = 1:numTrials
         ['Finished Trial ' int2str(currTrial) sprintf('\n') ...
          'Pausing for: ' int2str(pauseBetweenTrials) ' seconds before next trial.'], ...
          'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
-    sound(endTrialSound, sound_fs)
+
+    if ~is_visual % Play end sound if needed
+        sound(diffTrigger, getSoundFs());
+    end
+     
     pause(0.5)  % pausing as a safety buffer for final trigger recording in EEG
     EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
 
@@ -98,30 +106,40 @@ end
 close(MainFig)
 end
 
+function [trainingSamples, diffTrigger, classNames] = loadTrainingSamples(triggerBankFolder, is_visual)
 
-function [endTrailSound, trainingSounds] = GetTriggers(triggerBankFolder, numClasses)
-    files = dir(triggerBankFolder);
-    for idx = 1:length(files)
-        curr_name = files(idx).name;
-        if strfind(curr_name, 'end')
-            endTrailSound = audioread(strcat(triggerBankFolder,curr_name));
-        else if strfind(curr_name, 'base')
-                trainingSounds{1} = audioread(strcat(triggerBankFolder,curr_name));
-            end
-        end
+    function [trigger] = load_func(varargin)
+       path =  varargin{1,end};
+       path = path{1};
+       if is_visual
+           trigger = imread(path);
+       else
+           trigger = audioread(path);
+       end
     end
+
+        files = dir(triggerBankFolder);
+    for i = 1:length(files)
+        file_names{i} = files(i).name;
+    end
+    file_names = sort(file_names);
+    file_names = file_names(3:length(file_names));  % remove . & .. from names
     
-    for sample_idx = 2:(numClasses+1)
-        for idx = 1:length(files)
-            curr_name = files(idx).name;
-            if strfind(curr_name,['trigger' int2str(sample_idx-1)])
-                trainingSounds{sample_idx} =  audioread(strcat(triggerBankFolder,curr_name));
-                break
-            end
-        end
+    diffTrigger = load_func(strcat(triggerBankFolder, '\', file_names(1)));
+    for i=2:length(file_names)
+        trainingSamples{i-1} = load_func(strcat(triggerBankFolder, '\', file_names(i)));
+        classNames{i-1} = getClassNameFromFileName(file_names(i));
     end
 end
 
+function [name] = getClassNameFromFileName(file_name)
+    file_name = file_name{1};
+    start_loc = strfind(file_name, '_');
+    start_loc = start_loc(1);
+    end_loc = strfind(file_name, '.');
+    end_loc = end_loc(1);
+    name = file_name(start_loc:(end_loc-1));
+end
 
 function [recordingBuffer] = setUpRecordingSimulink(Hz, eegSampleSize) 
     [usbObj, scopeObj, impObj, ampObj] = Utils.CreateSimulinkObj();
@@ -140,3 +158,21 @@ function [recordingBuffer] = setUpRecordingSimulink(Hz, eegSampleSize)
 
     recordingBuffer = get_param(SampleSizeObj,'RuntimeObject');
 end
+
+function activateVisualTrigger(trainingImages, idx)
+    cla
+    image(flip(trainingImages{idx}, 1), 'XData', [0.25, 0.75],...
+        'YData', [0.25, 0.75 * ...
+        size(trainingImages{idx},1)./ size(trainingImages{idx},2)])
+end
+
+function activateAudioTrigger(trainingSounds, idx)
+    sound_fs = 4096;
+    sound(trainingSounds{1, idx}, getSoundFs());
+end
+
+function [soundFs] = getSoundFs()
+    soundFs = 49920;
+end
+
+

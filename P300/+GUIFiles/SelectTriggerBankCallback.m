@@ -3,7 +3,7 @@ function SelectTriggerBankCallback(varargin)
 %   Detailed explanation goes here
 
 triggerBank = varargin{1,end};
-selectedBank = uigetdir(strcat(pwd, 'TriggersBank'), ...
+selectedBank = uigetdir(strcat(pwd, '\TriggersBank\visual-3-classes'), ...
     'Choose Desired Trigger Bank');
 triggerBank{1} = selectedBank;
 

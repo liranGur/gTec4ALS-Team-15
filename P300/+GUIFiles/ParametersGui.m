@@ -101,7 +101,7 @@ GUI.Hz    = uicontrol('style','popupmenu',...
     'string',['512';'256';]);
 
 %% Callbacks
-triggerBank{1}= './TriggersBank/Sounds1/';
+triggerBank{1}= strcat(pwd, '\TriggersBank\visual-3-classes');
 set(GUI.Imp,'callback',{@GUIFiles.OpenImpedanceCallback});
 set(GUI.bank,'callback',{@GUIFiles.SelectTriggerBankCallback,triggerBank})
 
