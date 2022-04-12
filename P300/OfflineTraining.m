@@ -31,7 +31,7 @@ pretrialSafetyBuffer = 3;                       % seconds to record before trial
 trialTime = triggersInTrial*timeBetweenTriggers + pretrialSafetyBuffer;
 eegSampleSize = Hz*trialTime; 
 
-% recordingBuffer = setUpRecordingSimulink(Hz, eegSampleSize);
+recordingBuffer = setUpRecordingSimulink(Hz, eegSampleSize);
 
 %% Load Train Samples
 [trainingSamples, diffTrigger, classNames] = loadTrainingSamples(triggerBankFolder, is_visual);
@@ -91,7 +91,7 @@ for currTrial = 1:numTrials
     for currTrigger=1:triggersInTrial 
         currClass = trainingVec(currTrigger);
         activateTrigger(trainingSamples, currClass)
-        triggerTime(currTrial, currTrigger+1) = now
+        triggerTime(currTrial, currTrigger+1) = now;
         pause(timeBetweenTriggers + rand*maxRandomTimeBetweenTriggers)  % use random time diff between triggers
     end
     
@@ -107,7 +107,7 @@ for currTrial = 1:numTrials
     end
      
     pause(0.5)  % pausing as a safety buffer for final trigger recording in EEG
-%     EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
+    EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
 
     pause(pauseBetweenTrials)
 end
@@ -157,7 +157,7 @@ function [recordingBuffer] = setUpRecordingSimulink(Hz, eegSampleSize)
     % open Simulink
     open_system(['GUIFiles/' usbObj])
 
-    set_param(ampObj, 'Hz', num2str(Hz));           % TODO check how hz is configured in slx
+%     set_param(ampObj, 'Hz', num2str(Hz));           % TODO check how hz is configured in slx
 
     % Set simulink recording buffer size 
     SampleSizeObj = [usbObj '/Chunk Delay'];        % Todo try to change this name

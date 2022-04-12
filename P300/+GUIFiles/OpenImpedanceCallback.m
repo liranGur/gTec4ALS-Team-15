@@ -7,7 +7,9 @@ function OpenImpedanceCallback(varargin)
 set_param(usbObj,'Location',[1300 199 1301 200])
 
 open_system(impObj);
-open_system(scopeObj);
-Utils.startSimulation(inf, usbObj);
+
+% GUIFiles.CloseSimulinkDialog();
+% open_system(scopeObj);
+close_system(impObj);
 
 end
