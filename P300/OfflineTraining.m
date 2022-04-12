@@ -61,11 +61,7 @@ EEG = zeros(numTrials, eegChannels, eegSampleSize);
 
 for currTrial = 1:numTrials
     % Prepare Trial
-    if is_visual
-        trainingVec = Utils.TrainingVecCreator(numClasses, oddBallProb, triggersInTrial, baseStartLen);  % This also needs to be updated
-    else
-        trainingVec = Utils.VisualTrainingVecCreator(numClasses, triggersInTrial)
-    end
+    trainingVec = Utils.TrainingVecCreator(numClasses, oddBallProb, triggersInTrial, baseStartLen);
     targetClass = round((numClasses-1)*rand);
     expectedClasses(currTrial) = targetClass;
     fullTrainingVec(currTrial, : ) = trainingVec;
@@ -165,10 +161,10 @@ end
 
 function activateVisualTrigger(trainingImages, idx)
     cla
-    imshow('C:\Ariel\Files\BCI4ALS\gTec4ALS-Team-15\P300\TriggersBank\visual-3-classes\diff_noname.jpg')
-%     image(flip(trainingImages{idx}, 1), 'XData', [0.25, 0.75],...
-%         'YData', [0.25, 0.75 * ...
-%         size(trainingImages{idx},1)./ size(trainingImages{idx},2)])
+%     imshow('C:\Ariel\Files\BCI4ALS\gTec4ALS-Team-15\P300\TriggersBank\visual-3-classes\diff_noname.jpg')
+    image(flip(trainingImages{idx}, 1), 'XData', [0.25, 0.75],...
+        'YData', [0.25, 0.75 * ...
+        size(trainingImages{idx},1)./ size(trainingImages{idx},2)])
 end
 
 function activateAudioTrigger(trainingSounds, idx)
