@@ -1,4 +1,4 @@
-function [trainingVec] = TrainingVecCreator(numClasses, oddBallProb, sequenceLength, baseStartLen)
+function [trainingVec] = AudioTrainingVecCreator(numClasses, oddBallProb, sequenceLength, baseStartLen)
 %TRAININGVECCREATOR Create labels for training vector
 % numClasses 
 % oddBallProb - probability of the odd ball classes
