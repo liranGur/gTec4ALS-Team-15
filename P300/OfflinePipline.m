@@ -39,8 +39,9 @@ save(strcat(recordingFolder, 'parameters.mat'), 'parametersToSave')
 
 %% PreProcessing
 
-processedEEG = Preprocessing(EEG, is_visual, highLim, lowLim, downSampleRate, triggersInTrial, triggerWindowTime, ...
-                             numChannles, preTriggerRecTime, timeBetweenTriggers);
+processedEEG = Preprocessing(EEG, is_visual, Utils.Config.highLim, Utils.Config.lowLim, ...
+                             Utils.Config.downSampleRate, triggersInTrial, Utils.Config.triggerWindowTime, ...
+                             Utils.Config.eegChannels, Utils.Config.preTriggerRecTime, timeBetweenTriggers);
 
 save(strcat(recordingFolder, 'processedEEG.mat'), 'processedEEG');
 end

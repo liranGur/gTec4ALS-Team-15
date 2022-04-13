@@ -1,5 +1,5 @@
-function DisplaySetUp()
-%DISPLAYSETUO Summary of this function goes here
+function [fig, ax] =  DisplaySetUp()
+%DISPLAYSETUP Summary of this function goes here
 %   Detailed explanation goes here
 % Checking monitor position and number of monitors
 monitorPos = get(0,'MonitorPositions');
@@ -11,28 +11,25 @@ if choosenMonitor < monitorN
     choosenMonitor = 1;
     disp('Another monitored is not detected, using main monitor')
 end
-% Get choosen monitor position
+
 figurePos = monitorPos(choosenMonitor, :);
+figure('outerPosition',figurePos);                      % Open figuer + set monitor
 
-% Open full screen monitor
-figure('outerPosition',figurePos);
+fig = gcf;
+ax = gca;
+set(ax,'Unit','normalized','Position',[0 0 1 1]);      % Full screen
+set(ax,'color', 'black');                              % Background color
 
-% get the figure and axes handles
-MainFig = gcf;
-hAx  = gca;
+set(fig,'menubar','none')                           % Hide menu bar
+set(fig,'NumberTitle','off')                        % Hide title bar
 
-% set the axes to full screen
-set(hAx,'Unit','normalized','Position',[0 0 1 1]);
-% hide the toolbar
-set(MainFig,'menubar','none')
-% to hide the title
-set(MainFig,'NumberTitle','off');
-% Set background color
-set(hAx,'color', 'black');
-% Lock axes limits
-hAx.XLim = [0, 1];
-hAx.YLim = [0, 1];
+% Lock axes limits - This is needed to keeping text in same location after showing images
+ax.XLim = [-inf inf];
+ax.YLim = [-inf inf];
 hold on
+
+% axis off
+% axis image
 
 end
 

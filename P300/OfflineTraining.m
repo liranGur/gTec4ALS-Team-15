@@ -31,31 +31,28 @@ eegSampleSize = Utils.Config.Hz*trialTime;
 %% Load Train Samples
 [trainingSamples, diffTrigger, classNames] = loadTrainingSamples(triggerBankFolder, is_visual);
 
-%% Callibrate System
+%% Setup & Callibrate System
 
-% Utils.DisplaySetUp();
-figure()
+[fig, ax] = Utils.DisplaySetUp();
 
 % Show a message that declares that training is about to begin
-text(0.5,0.5 ,...
-    ['System is calibrating.' sprintf('\n') 'The training session will begin shortly.'], ...
-    'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
+displayText(['System is calibrating.' sprintf('\n') ...
+             'The training session will begin shortly.'])
 pause(calibrationTime)
 
-% Clear axis
-cla
-
-%% Record trials
+%% Training Setup
 if is_visual
-    activateTrigger = @activateVisualTrigger;
+    activateTrigger = @(images, idx) activateVisualTrigger(images, idx, diffTrigger);
 else
-    activateTrigger = @activateAudioTrigger;
+    activateTrigger = @(sounds, idx) activateAudioTrigger(sounds, idx);
 end
 
 fullTrainingVec = ones(numTrials, triggersInTrial);
 expectedClasses = zeros(numTrials, 1);
 EEG = zeros(numTrials, Utils.Config.eegChannels, eegSampleSize);
 triggersTime = zeros(numTrials, (triggersInTrial+1));
+
+%% Training
 
 for currTrial = 1:numTrials
     % Prepare Trial
@@ -66,17 +63,14 @@ for currTrial = 1:numTrials
     assert(targetClass > 1 & targetClass <= (numClasses+1), 'Sanity check target class')
     fullTrainingVec(currTrial, : ) = trainingVec;
     
-    cla
-    text(0.5,0.5 ,...
-        ['Starting Trial ' int2str(currTrial) sprintf('\n') ...
-         'Please count the apperances of class' sprintf('\n') classNames(targetClass)], ...
-         'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
+    displayText(['Starting Trial ' int2str(currTrial) sprintf('\n') ...
+                 'Please count the apperances of class'  sprintf('\n')...
+                 classNames(targetClass)]);
     
     % Show base image for a few seconds before start
     if is_visual
-        pause(1)
-        cla
-        image(flip(diffTrigger, 1))
+        pause(Utils.Config.preTrialPause);
+        dispalyImageWrapper(diffTrigger)
     end
     
     % Short wait before trial starts
@@ -85,31 +79,28 @@ for currTrial = 1:numTrials
     % Trial - play triggers
     for currTrigger=1:triggersInTrial 
         currClass = trainingVec(currTrigger);
-        activateTrigger(trainingSamples, currClass)
-        triggersTime(currTrial, currTrigger+1) = now;
+        currTriggerTime = activateTrigger(trainingSamples, currClass);
+        triggersTime(currTrial, currTrigger+1) = currTriggerTime;
         pause(timeBetweenTriggers + rand*Utils.Config.maxRandomTimeBetweenTriggers)  % use random time diff between triggers
     end
     
+    %     EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
+    % add dump time of trail to allow splitting
+    triggersTime(currTrial,(triggersInTrial+1)) = now;    
+    
     % End of Trial
-    cla
-    text(0.5,0.5 ,...
-        ['Finished Trial ' int2str(currTrial) sprintf('\n') ...
-         'Pausing for: ' int2str(pauseBetweenTrials) ' seconds before next trial.'], ...
-         'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
+    set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again
+    displayText(['Finished Trial ' int2str(currTrial) sprintf('\n') ...
+                 'Pausing for: ' int2str(pauseBetweenTrials) ' seconds before next trial.']);
 
     if ~is_visual % Play end sound if needed
         sound(diffTrigger, getSoundFs());
     end
-     
-    pause(0.5)  % pausing as a safety buffer for final trigger recording in EEG
-%     EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
-    % add finsh time of trail to allow splitting
-    triggersTime(currTrial,(triggersInTrial+1)) = now;    
 
     pause(pauseBetweenTrials)
 end
 
-close(MainFig)
+
 end
 
 function [trainingSamples, diffTrigger, classNames] = loadTrainingSamples(triggerBankFolder, is_visual)
@@ -166,20 +157,31 @@ function [recordingBuffer] = setUpRecordingSimulink(Hz, eegSampleSize)
     recordingBuffer = get_param(SampleSizeObj,'RuntimeObject');
 end
 
-function activateVisualTrigger(trainingImages, idx)
-    cla
-%     imshow(trainingImages{idx})
-%     imshow('C:\Ariel\Files\BCI4ALS\gTec4ALS-Team-15\P300\TriggersBank\visual-3-classes\base.jpg', ...
-%             'Border','tight')
-    imshow(flip(trainingImages{idx}, 1))
+function dispalyImageWrapper(image)
+    imshow(image, 'InitialMagnification','fit')
 end
 
-function activateAudioTrigger(trainingSounds, idx)
+function [time] = activateVisualTrigger(trainingImages, idx, jitterImage)
+    cla
+    dispalyImageWrapper(trainingImages{idx})
+    time = now;
+    pause(Utils.Config.jitterPauseTime);
+    dispalyImageWrapper(jitterImage);
+end
+
+function [time] = activateAudioTrigger(trainingSounds, idx)
     sound(trainingSounds{1, idx}, getSoundFs());
+    time = now;
 end
 
 function [soundFs] = getSoundFs()
     soundFs = 49920;
+end
+
+function displayText(textToDisplay)
+    cla
+    text(0.5,0.5, textToDisplay, ...
+         'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
 end
 
 
