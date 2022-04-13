@@ -1,31 +1,21 @@
-function [EEG] = Preprocessing(EEG, Hz, highLim, lowLim, down_srate, ...,
-                               numTriggersInTrial, windowTime, numChannles, ...
-                               timeBeforeTriggerToTake, triggersTime)
+function [EEG] = Preprocessing(EEG, triggersTime)
 % Preprocessing - all the preprocessing done on recorded data
 %
 %INPUT:
 %   EEG - raw EEG recorded. shape: (#trials, #channels, size of recording)
-%   Hz - 
-%   highLim - frequency high limit for low pass filter
-%   lowLim - frequency low limit for high pass filter
-%   down_srate - down sampling rate
-%   numTriggersInTrial - 
-%   windowTime - how long each trigger window should be in seconds;
-%   numChannles - EEG numChannels
-%   timeBeforeTriggerToTake - time of window to take befor trigger in seconds
 %   triggersTime - time each trigger was activated and the end of recording time
 % 
 %OUTPUT:
-%   EEG - processed EGG. shape: ???? #trials, #triggers, #channels, #down_srate*(windowTime+timeBeforeTriggerToTake)????
+%   EEG - processed EGG. shape: #trials, #triggers_in_trial, #eeg_channels, size down sampled trigger size 
 
+    EEG = splitTrials(EEG, triggersTime);
     
-    EEG = split_trials(EEG, numTriggersInTrial, Hz, windowTime, numChannles, ...
-                       timeBeforeTriggerToTake, triggersTime);
-    EEG = pop_eegfiltnew(EEG, 'hicutoff',highLim,'plotfreqz',1); % low pass
-    EEG = pop_eegfiltnew(EEG, 'locutoff',lowLim,'plotfreqz',1);  % high pass
+    % This code needs to be fixed to new EEG shape
+    EEG = pop_eegfiltnew(EEG, 'hicutoff', Utils.Config.highLim,'plotfreqz',1); % low pass
+    EEG = pop_eegfiltnew(EEG, 'locutoff',Utils.Config.lowLim,'plotfreqz',1);  % high pass
     % downsample
-    if Hz > down_srate
-        EEG = pop_resample(EEG, down_srate);
+    if Hz > Utils.Config.down_srate
+        EEG = pop_resample(EEG, Utils.Config.down_srate);
     end
     
 %     %Zero-phase digital filtering
@@ -34,40 +24,45 @@ function [EEG] = Preprocessing(EEG, Hz, highLim, lowLim, down_srate, ...,
 end
     %Median Filtering
     %Facet Method
-function [res] = split_trials(EEG, triggersInTrial, Hz, windowTime, numChannles, timeBeforeTriggerToTake, ...
-                              triggersTime)
-% Split all the trials to triggers
+
+function [splitEeg] = splitTrials(EEG, triggersTimes)
+% Split all the trials to triggers, size is set according to Utils.Config
 % 
 % INPUT:
 %   EEG - full EEG recording with shape: ????
-%   triggersInTrial - number of triggers in trial
-%   Hz - recording frequency
-%   windowTime - trigger eeg recording window time in seconds
-%   numChannles - number of channels in EEG
-%   timeBeforeTriggerToTake - time in seconds before trigger starts to include in trigger recording
-%   triggersTime - time each trigger was activated and the end of recording time
+%   triggersTimes - time each trigger was activated and the trial recording end time
 % 
 % OUTPUT:
-%   res - the EEG split into triggers, shape of:???? (#trials, #channles, #triggers(trialLength), size of trigger recording)
+%   res - the EEG split into triggers, shape: #trials, #triggers_in_trial, #eeg_channels, size of trigger window)
 % 
-    
-    first_sample_time = 
 
+    % Extract recording info & constants
+    Hz = Utils.Config.Hz;
+    eegShape = size(EEG);
+    totalNumSamples = eegShape(3);
+    numTrials = eegShape(1);
+    eegChannels = eegShape(2);
+    totalRecordingTime = Hz / totalNumSamples;
+    totalRecordingTime = totalRecordingTime*6e10;            % Convert to nanoseconds
+    numTriggersInTrial = size(triggersTimes);
+    numTriggersInTrial = numTriggersInTrial(2) - 1;
+    preTriggerWindowSize = Utils.Config.preTriggerRecTime * Hz ;
+    postTriggerWindowSize = Utils.Config.triggerWindowTime * Hz;
+    windowSize = preTriggerWindowSize + postTriggerWindowSize ;
     
-    numOfTrials = size(EEG);
-    numOfTrials = numOfTrials(1);
-    preTrigRec = Hz*timeBeforeTriggerToTake;
-    windowSize = Hz*windowTime + preTrigRec; 
-    res = zeros(numOfTrials, numChannles, triggersInTrial, windowSize);
-    for trial=1:numOfTrials
-        res(trial,:,1) = EEG(trial,:,1:windowSize);
-        for trigger=2:triggersInTrial
-            startPos = trigger*timeBetweenTriggers*Hz - preTrigRec;
-            endPos = (trigger+1)*timeBetweenTriggers*H;
-            res(trial,:,trigger) = EEG(trial,:,startPos:endPos);
+    splitEeg = zeros(numTrials, numTriggersInTrial, eegChannels, windowSize);
+    
+    % split to triggers
+    for currTrial=1:numTrials
+        currTrialEndTime = triggersTimes(currTrial, numTriggersInTrial + 1);
+        currTrialStartTime = currTrialEndTime - totalRecordingTime;
+        for currTrigger=1:numTriggersInTrial
+            currTriggerStartSampleIdx = triggersTimes(currTrial, currTrigger) - currTrialStartTime;
+            windowStartSampleIdx = currTriggerStartSampleIdx - preTriggerWindowSize;
+            windowEndSampleIdx = currTriggerStartSampleIdx + postTriggerWindowSize;
+            splitEeg(currTrial, currTrigger, :, :) = EEG(currTrial, :, windowStartSampleIdx: windowEndSampleIdx);
         end
     end
-    
 end
     
    
