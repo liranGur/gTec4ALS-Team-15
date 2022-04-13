@@ -1,9 +1,10 @@
-function [trainingVec] = TrainingVecCreator(numClasses, oddBallProb, sequenceLength, baseStartLen)
+function [trainingVec] = TrainingVecCreator(numClasses, oddBallProb, sequenceLength, is_visual)
 %TRAININGVECCREATOR Create labels for training vector
 % numClasses 
 % oddBallProb - probability of the odd ball classes
 % sequenceLength - number of signals in trail
-% baseStartLen - How much of the first trails will be base trails
+% is_visual -
+
 
 trainingVec=ones(sequenceLength,1);
 perClassAmount = round(sequenceLength*oddBallProb);
@@ -12,7 +13,7 @@ currClass = 2;
 currClassAmount = 0;
 currClassRuns = 0;
 while currClass < numClasses + 2
-    for i=baseStartLen+1:sequenceLength 
+    for i=Utils.Config.startingNormalTriggers+1:sequenceLength 
         if trainingVec(i) ~= 1 
             continue
         end

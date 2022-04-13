@@ -1,4 +1,4 @@
-function [Hz, trialLength, numClasses, subId, numTrials, timeBetweenTriggers, oddBallProb, ...
+function [is_visual, trialLength, numClasses, subId, numTrials, timeBetweenTriggers, oddBallProb, ...
     calibrationTime, pauseBetweenTrials, triggerBank] = ParametersGui()
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
@@ -90,15 +90,15 @@ GUI.bank = uicontrol('style','push',...
     [editor_col_x_pos(3) editor_row_y_pos(2) editor_width editor_height],'0.14');
 
 
-% Set Hz
-GUI.Hztxt = uicontrol('style','text',...
+% Set visual / auditory options
+GUI.avText = uicontrol('style','text',...
     'unit','normalized',...
     'position',[lables_col_x_pos(3) labels_row_y_pos(3) text_width editor_height],...
-    'string','Sampling rate:');
-GUI.Hz    = uicontrol('style','popupmenu',...
+    'string','Train Mode:');
+GUI.avType    = uicontrol('style','popupmenu',...
     'unit','normalized',...
     'position',[editor_col_x_pos(3) (editor_row_y_pos(3)-0.02) editor_width editor_height],...
-    'string',['512';'256';]);
+    'string',['Visual  ';'Auditory';]);
 
 %% Callbacks
 triggerBank{1}= strcat(pwd, '\TriggersBank\visual-3-classes');
@@ -117,8 +117,8 @@ uiwait(GUI.fh);
 
 %% Extract user input parameters
 % Extract sampling rate value
-posHz = GUI.Hz.Value;
-Hz    = str2double(GUI.Hz.String(posHz,:));
+selectedMode = GUI.avType.Value;
+is_visual    = selectedMode == 1;
 trialLength = str2double(GUI.trialLength.String);
 numClasses = str2double(GUI.nCls.String);
 subId = str2double(GUI.subID.String);

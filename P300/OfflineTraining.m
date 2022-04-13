@@ -1,7 +1,7 @@
 function [EEG, fullTrainingVec, expectedClasses, triggersTime] = ... 
     OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, ...
-                    numClasses, oddBallProb, triggersInTrial, baseStartLen, ...
-                    Hz, eegChannels, triggerBankFolder, is_visual)
+                    numClasses, oddBallProb, triggersInTrial, ...
+                    triggerBankFolder, is_visual)
 % OfflineTraining - This function is responsible for offline training and
 % recording EEG data
 % INPUT:
@@ -12,26 +12,21 @@ function [EEG, fullTrainingVec, expectedClasses, triggersTime] = ...
 %   - numClasses - odd ball classe (e.g., 1-> only one odd ball and baseline)
 %   - oddBallProb - in [0,1]
 %   - triggersInTrial - number of triggers in a trial
-%   - baseStartLen - number baseline triggers in the start of each trial
+%   - baseStartLen - 
 %   - USBobj - Simulink object
-%   - Hz - EEG recording frequency
-%   - eegChannels - number of channels recorded (i.e., number of electordes)
 
 % OUTPUT:
 %   EEG - EEG signal of training. shape: (# trials, # EEG channels, trial sample size) 
 %   fullTrainingVec - Triggers during training. shape: (# trials, trial length)
 %   expectedClasses - Class the subject neeeds to focus on in each trial
+%   triggersTime - system time of each trigger showing and the buffer dump time
 %
 
 
-preTrialPause = 2;
-maxRandomTimeBetweenTriggers = 0.3;
+trialTime = triggersInTrial*timeBetweenTriggers + Utils.Config.pretrialSafetyBuffer;
+eegSampleSize = Utils.Config.Hz*trialTime; 
 
-pretrialSafetyBuffer = 3;                       % seconds to record before trial starts
-trialTime = triggersInTrial*timeBetweenTriggers + pretrialSafetyBuffer;
-eegSampleSize = Hz*trialTime; 
-
-recordingBuffer = setUpRecordingSimulink(Hz, eegSampleSize);
+% recordingBuffer = setUpRecordingSimulink(Utils.Config.Hz, eegSampleSize);
 
 %% Load Train Samples
 [trainingSamples, diffTrigger, classNames] = loadTrainingSamples(triggerBankFolder, is_visual);
@@ -59,12 +54,12 @@ end
 
 fullTrainingVec = ones(numTrials, triggersInTrial);
 expectedClasses = zeros(numTrials, 1);
-EEG = zeros(numTrials, eegChannels, eegSampleSize);
-triggersTime = zeros(numTrials, (triggersInTrial + 1));
+EEG = zeros(numTrials, Utils.Config.eegChannels, eegSampleSize);
+triggersTime = zeros(numTrials, (triggersInTrial+1));
 
 for currTrial = 1:numTrials
     % Prepare Trial
-    trainingVec = Utils.TrainingVecCreator(numClasses, oddBallProb, triggersInTrial, baseStartLen);
+    trainingVec = Utils.TrainingVecCreator(numClasses, oddBallProb, triggersInTrial, is_visual);
     assert(all(trainingVec <= (numClasses + 1)), 'Sanity check training Vector')
     targetClass = round((numClasses-1)*rand) + 2;
     expectedClasses(currTrial) = targetClass;
@@ -76,23 +71,23 @@ for currTrial = 1:numTrials
         ['Starting Trial ' int2str(currTrial) sprintf('\n') ...
          'Please count the apperances of class' sprintf('\n') classNames(targetClass)], ...
          'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);
-    pause(preTrialPause)
     
     % Show base image for a few seconds before start
     if is_visual
+        pause(1)
         cla
         image(flip(diffTrigger, 1))
-        pause(3);
-    end    
+    end
     
-    % add zero time
-    triggersTime(currTrial, 1) = now;
+    % Short wait before trial starts
+    pause(Utils.Config.preTrialPause);
+    
     % Trial - play triggers
     for currTrigger=1:triggersInTrial 
         currClass = trainingVec(currTrigger);
         activateTrigger(trainingSamples, currClass)
-        triggerTime(currTrial, currTrigger+1) = now;
-        pause(timeBetweenTriggers + rand*maxRandomTimeBetweenTriggers)  % use random time diff between triggers
+        triggersTime(currTrial, currTrigger+1) = now;
+        pause(timeBetweenTriggers + rand*Utils.Config.maxRandomTimeBetweenTriggers)  % use random time diff between triggers
     end
     
     % End of Trial
@@ -107,7 +102,9 @@ for currTrial = 1:numTrials
     end
      
     pause(0.5)  % pausing as a safety buffer for final trigger recording in EEG
-    EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
+%     EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
+    % add finsh time of trail to allow splitting
+    triggersTime(currTrial,(triggersInTrial+1)) = now;    
 
     pause(pauseBetweenTrials)
 end
