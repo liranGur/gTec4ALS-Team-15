@@ -1,6 +1,7 @@
 function [fig, ax] =  DisplaySetUp()
-%DISPLAYSETUP Summary of this function goes here
-%   Detailed explanation goes here
+% Setup display monitor and set up figure for all training
+
+%% Set up monitor
 % Checking monitor position and number of monitors
 monitorPos = get(0,'MonitorPositions');
 monitorN = size(monitorPos, 1);
@@ -12,11 +13,14 @@ if choosenMonitor < monitorN
     disp('Another monitored is not detected, using main monitor')
 end
 
+%% Set figure
+
 figurePos = monitorPos(choosenMonitor, :);
-figure('outerPosition',figurePos);                      % Open figuer + set monitor
+figure('outerPosition',figurePos);                      % Open figuer in selected monitor
 
 fig = gcf;
 ax = gca;
+
 set(ax,'Unit','normalized','Position',[0 0 1 1]);      % Full screen
 set(ax,'color', 'black');                              % Background color
 
@@ -27,9 +31,6 @@ set(fig,'NumberTitle','off')                        % Hide title bar
 ax.XLim = [-inf inf];
 ax.YLim = [-inf inf];
 hold on
-
-% axis off
-% axis image
 
 end
 

@@ -1,5 +1,5 @@
 function [is_visual, trialLength, numClasses, subId, numTrials, timeBetweenTriggers, oddBallProb, ...
-    calibrationTime, pauseBetweenTrials, triggerBank] = ParametersGui()
+    calibrationTime, pauseBetweenTrials, triggerBank, timeBeforeJitter] = ParametersGui()
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -66,7 +66,7 @@ GUI.bank = uicontrol('style','push',...
 %time between triggers 
 [GUI.timeBetweenTriggersTxt, GUI.timeBetweenTriggers] = LabelEditorCreator(...
     [lables_col_x_pos(2) labels_row_y_pos(1) text_width text_height], ['Time between ', sprintf('\n'), 'triggers(sec):'],...
-    [editor_col_x_pos(2) editor_row_y_pos(1) editor_width editor_height],'0.15');
+    [editor_col_x_pos(2) editor_row_y_pos(1) editor_width editor_height],'0.15,0.1');
 
 %Oddball Probability
 [GUI.trialLengthTxt, GUI.trialLength] = LabelEditorCreator(...
@@ -116,26 +116,30 @@ set(GUI.confirm, 'callback', {@releaseGui});
 uiwait(GUI.fh);
 
 %% Extract user input parameters
-% Extract sampling rate value
+
 selectedMode = GUI.avType.Value;
 is_visual    = selectedMode == 1;
 trialLength = str2double(GUI.trialLength.String);
 numClasses = str2double(GUI.nCls.String);
 subId = str2double(GUI.subID.String);
 numTrials = str2double(GUI.nTrial.String);
-timeBetweenTriggers = str2double(GUI.timeBetweenTriggers.String);
+
 oddBallProb = str2double(GUI.oddBallProb.String);
 calibrationTime = str2double(GUI.calibrationTime.String);
-pauseBetweenTrials = str2double(GUI.pauseBetweenTrials.String);
 triggerBank = triggerBank{1};
+pauseBetweenTrials = str2double(GUI.pauseBetweenTrials.String);
+
+pauseResponse = GUI.timeBetweenTriggers.String;
+splitIdx = strfind(pauseResponse, ',');
+timeBetweenTriggers = str2double(pauseResponse(1:splitIdx-1));
+timeBeforeJitter = str2double(pauseResponse(splitIdx+1:length(pauseResponse)));
 
 close(GUI.fh);
 
 end
 
 function [label, editor] = LabelEditorCreator(label_pos, lablel_text, editor_pos, editor_text)
-%LABELEDITORCREATOR Summary of this function goes here
-%   Detailed explanation goes here
+% LabelEditorCreator - create label and editor text field
 
 label = uicontrol('style','text',...
                   'unit','normalized',...

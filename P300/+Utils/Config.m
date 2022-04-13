@@ -10,7 +10,6 @@ classdef Config
         pretrialSafetyBuffer = 3;           % Time in seconds to add to buffer for safety reasons (not to lose recording data)
         preTrialPause = 2;                  % How long to wait in seconds before starting trial after showing the new trial window
         maxRandomTimeBetweenTriggers = 0.3;
-        jitterPauseTime = 0.1;              % Pause time before cleaning screen image
         
         %% Preprocessing paramters
         highLim = 100;                      % Low pass frequency filter value

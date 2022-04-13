@@ -1,13 +1,15 @@
-function [EEG] = Preprocessing(EEG, triggersTime)
+function [EEG] = Preprocessing(EEG, triggersTime, trainingVector)
 % Preprocessing - all the preprocessing done on recorded data
 %
 %INPUT:
 %   EEG - raw EEG recorded. shape: (#trials, #channels, size of recording)
 %   triggersTime - time each trigger was activated and the end of recording time
+%   trainingVector - Triggers during training. shape: (# trials, #triggers_in_trial)
 % 
 %OUTPUT:
 %   EEG - processed EGG. shape: #trials, #triggers_in_trial, #eeg_channels, size down sampled trigger size 
 
+    % Spliting the trials must be the first thing to happen to allow for correct splitting because splitting is based on time stamps
     EEG = splitTrials(EEG, triggersTime);
     
     % This code needs to be fixed to new EEG shape
