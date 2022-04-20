@@ -26,8 +26,8 @@ function [EEG, fullTrainingVec, expectedClasses, triggersTime] = ...
 
 %% Set up parameters
 trialTime = triggersInTrial*timeBetweenTriggers + Utils.Config.pretrialSafetyBuffer;
-eegSampleSize = Utils.Config.Hz*trialTime; 
-% recordingBuffer = setUpRecordingSimulink(Utils.Config.Hz, eegSampleSize);
+eegSampleSize = round(Utils.Config.Hz*trialTime); 
+recordingBuffer = setUpRecordingSimulink(Utils.Config.Hz, eegSampleSize);
 
 %% Load Train Samples
 [trainingSamples, diffTrigger, classNames] = loadTrainingSamples(triggerBankFolder, is_visual);
@@ -85,7 +85,7 @@ for currTrial = 1:numTrials
         pause(timeBetweenTriggers + rand*Utils.Config.maxRandomTimeBetweenTriggers)  % use random time diff between triggers
     end
     
-    %     EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
+    EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
     % get EEG dump time of trial
     triggersTime(currTrial,(triggersInTrial+1)) = now;    
     
@@ -197,7 +197,7 @@ function [recordingBuffer] = setUpRecordingSimulink(Hz, eegSampleSize)
 
     % Set simulink recording buffer size 
     SampleSizeObj = [usbObj '/Chunk Delay'];        % Todo try to change this name
-    set_param(SampleSizeObj,'siz',num2str(eegSampleSize));
+    set_param(SampleSizeObj,'siz',num2str(round(eegSampleSize)));
 
     Utils.startSimulation(inf, usbObj);
     open_system(scopeObj);
