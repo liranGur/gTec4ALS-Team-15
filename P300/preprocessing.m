@@ -44,23 +44,24 @@ function [splitEeg] = splitTrials(EEG, triggersTimes)
     totalNumSamples = eegShape(3);
     numTrials = eegShape(1);
     eegChannels = eegShape(2);
-    totalRecordingTime = Hz / totalNumSamples;
-    totalRecordingTime = totalRecordingTime*6e10;            % Convert to nanoseconds
+    totalRecordingTime = (totalNumSamples / Hz);
     numTriggersInTrial = size(triggersTimes);
     numTriggersInTrial = numTriggersInTrial(2) - 1;
-    preTriggerWindowSize = Utils.Config.preTriggerRecTime * Hz ;
-    postTriggerWindowSize = Utils.Config.triggerWindowTime * Hz;
+    preTriggerWindowSize = round(Utils.Config.preTriggerRecTime * Hz);
+    postTriggerWindowSize = round(Utils.Config.triggerWindowTime * Hz);
     windowSize = preTriggerWindowSize + postTriggerWindowSize ;
     
-    splitEeg = zeros(numTrials, numTriggersInTrial, eegChannels, windowSize);
-    
     % split to triggers
+    splitEeg = zeros(numTrials, numTriggersInTrial, eegChannels, windowSize);
     for currTrial=1:numTrials
         currTrialEndTime = triggersTimes(currTrial, numTriggersInTrial + 1);
         currTrialStartTime = currTrialEndTime - totalRecordingTime;
         for currTrigger=1:numTriggersInTrial
-            currTriggerStartSampleIdx = triggersTimes(currTrial, currTrigger) - currTrialStartTime;
+            currTriggerStartSampleIdx = round(triggersTimes(currTrial, currTrigger) - currTrialStartTime);
             windowStartSampleIdx = currTriggerStartSampleIdx - preTriggerWindowSize;
+            if windowStartSampleIdx < 1
+                windowStartSampleIdx = 1;
+            end
             windowEndSampleIdx = currTriggerStartSampleIdx + postTriggerWindowSize;
             splitEeg(currTrial, currTrigger, :, :) = EEG(currTrial, :, windowStartSampleIdx: windowEndSampleIdx);
         end

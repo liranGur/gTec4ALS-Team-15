@@ -7,12 +7,11 @@ from plotly.subplots import make_subplots
 
 
 HZ = 512
-SEC_TO_NS = 1e9
 
 
 def calculate_triggers_sample(triggers_time: np.ndarray, hz: int, recording_len: int) -> np.ndarray:
     end_time = triggers_time[-1]
-    total_recording_time = recording_len/hz * SEC_TO_NS
+    total_recording_time = recording_len/hz
     start_time = end_time - total_recording_time
 
     triggers_for_sampling = triggers_time[:-1]

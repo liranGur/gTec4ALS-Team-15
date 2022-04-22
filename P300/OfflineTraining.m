@@ -27,7 +27,7 @@ function [EEG, fullTrainingVec, expectedClasses, triggersTime] = ...
 %% Set up parameters
 trialTime = triggersInTrial*timeBetweenTriggers + Utils.Config.pretrialSafetyBuffer;
 eegSampleSize = round(Utils.Config.Hz*trialTime); 
-recordingBuffer = setUpRecordingSimulink(Utils.Config.Hz, eegSampleSize);
+% recordingBuffer = setUpRecordingSimulink(Utils.Config.Hz, eegSampleSize);
 
 %% Load Train Samples
 [trainingSamples, diffTrigger, classNames] = loadTrainingSamples(triggerBankFolder, is_visual);
@@ -82,7 +82,7 @@ for currTrial = 1:numTrials
         pause(timeBetweenTriggers + rand*Utils.Config.maxRandomTimeBetweenTriggers)  % use random time diff between triggers
     end
     
-    EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
+%     EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
     triggersTime(currTrial,(triggersInTrial+1)) = posixtime(datetime('now'));    
     
     % End of Trial
