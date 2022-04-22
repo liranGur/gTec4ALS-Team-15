@@ -7,7 +7,7 @@ classdef Config
         Hz = 512;
         startingNormalTriggers = 3;         % number baseline triggers in the start of each trial
         eegChannels = 16;
-        pretrialSafetyBuffer = 3;           % Time in seconds to add to buffer for safety reasons (not to lose recording data)
+        pretrialSafetyBuffer = 5;           % Time in seconds to add to buffer for safety reasons (not to lose recording data)
         preTrialPause = 2;                  % How long to wait in seconds before starting trial after showing the new trial window
         maxRandomTimeBetweenTriggers = 0.3;
         
