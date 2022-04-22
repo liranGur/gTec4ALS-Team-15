@@ -18,7 +18,7 @@ def calculate_triggers_sample(triggers_time: np.ndarray, hz: int, recording_len:
     sample_idx = np.zeros(len(triggers_time))
     for idx, trigger in enumerate(triggers_for_sampling):
         time_from_start = trigger - start_time
-        sample_idx[idx] = int((time_from_start/SEC_TO_NS) * hz)
+        sample_idx[idx] = int(time_from_start * hz)
     return sample_idx
 
 
