@@ -13,7 +13,8 @@ baseFolder = uigetdir('C:/P300Recordings/', ...
     calibrationTime, pauseBetweenTrials, triggerBankFolder, beforeJitterTime] = GUIFiles.ParametersGui();
 
 
-recordingFolder = [baseFolder '\' int2str(subId) '\'];
+recordingFolder = [baseFolder '\' int2str(subId) '\' strrep(datestr(now), ':','-') '\'];
+mkdir(recordingFolder);
 
 %% Training
 [EEG, trainingVec, expectedClasses, triggersTimes] = ...
