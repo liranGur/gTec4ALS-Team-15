@@ -78,12 +78,12 @@ for currTrial = 1:numTrials
     for currTrigger=1:triggersInTrial 
         currClass = trainingVec(currTrigger);
         currTriggerTime = activateTrigger(trainingSamples, currClass);
-        triggersTime(currTrial, currTrigger+1) = currTriggerTime;
+        triggersTime(currTrial, currTrigger) = currTriggerTime;
         pause(timeBetweenTriggers + rand*Utils.Config.maxRandomTimeBetweenTriggers)  % use random time diff between triggers
     end
     
     EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
-    triggersTime(currTrial,(triggersInTrial+1)) = now;    
+    triggersTime(currTrial,(triggersInTrial+1)) = posixtime(datetime('now'));    
     
     % End of Trial
     if currTrial ~= numTrials
@@ -182,7 +182,7 @@ function [time] = activateVisualTrigger(trainingImages, idx, jitterImage, timeBe
     
     cla
     dispalyImageWrapper(trainingImages{idx})
-    time = now;
+    time = posixtime(datetime('now'));
     pause(timeBeforeJitter);
     dispalyImageWrapper(jitterImage);
 end
@@ -198,7 +198,7 @@ function [time] = activateAudioTrigger(trainingSounds, idx)
 %     time - the time the sound trigger was played
 
     sound(trainingSounds{1, idx}, getSoundFs());
-    time = now;
+    time = posixtime(datetime('now'));
 end
 
 function [soundFs] = getSoundFs()
