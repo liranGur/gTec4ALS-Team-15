@@ -15,3 +15,4 @@ g.tec Softwares/*
 *.pyc
 *catboost_info*
 Python-TestModels/data/*
+*.mat

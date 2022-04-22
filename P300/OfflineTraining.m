@@ -20,7 +20,7 @@ function [EEG, fullTrainingVec, expectedClasses, triggersTime] = ...
 %   EEG - EEG signal of training. shape: (# trials, # EEG channels, trial sample size) 
 %   fullTrainingVec - Triggers during training. shape: (# trials, trial length)
 %   expectedClasses - class number the subject neeeds to focus on in each trial
-%   triggersTime - system time of each trigger showing and the buffer dump time
+%   triggersTime - system time of each trigger showing and the buffer dump time in last position
 %
 
 
@@ -36,7 +36,6 @@ recordingBuffer = setUpRecordingSimulink(Utils.Config.Hz, eegSampleSize);
 
 [fig, ax] = Utils.DisplaySetUp();
 
-% Show a message that declares that training is about to begin
 displayText(['System is calibrating.' sprintf('\n') ...
              'The training session will begin shortly.'])
 pause(calibrationTime)
@@ -68,16 +67,14 @@ for currTrial = 1:numTrials
                  ' Please count the apperances of class'  sprintf('\n')...
                  classNames(targetClass)]);
     
-    % Show base image for a few seconds before start
+    % Show base image for a few seconds before trial starts
     if is_visual
         pause(Utils.Config.preTrialPause);
         dispalyImageWrapper(diffTrigger)
     end
+
+    pause(Utils.Config.preTrialPause);    
     
-    % Short wait before trial starts
-    pause(Utils.Config.preTrialPause);
-    
-    % Trial - play triggers
     for currTrigger=1:triggersInTrial 
         currClass = trainingVec(currTrigger);
         currTriggerTime = activateTrigger(trainingSamples, currClass);
@@ -86,21 +83,29 @@ for currTrial = 1:numTrials
     end
     
     EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
-    % get EEG dump time of trial
     triggersTime(currTrial,(triggersInTrial+1)) = now;    
     
     % End of Trial
+    if currTrial ~= numTrials
+        endTrialTxt = ['Finished Trial ' int2str(currTrial) sprintf('\n') ...
+                     'Pausing for: ' int2str(pauseBetweenTrials) ' seconds before next trial.'];
+    else
+        endTrialTxt = ['Finished Last Trial - Good Job' sprintf('\n')  ...
+            'Starts processing the data please wait for window to close'];
+    end
+    
     set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
-    displayText(['Finished Trial ' int2str(currTrial) sprintf('\n') ...
-                 'Pausing for: ' int2str(pauseBetweenTrials) ' seconds before next trial.']);
+    displayText(endTrialTxt);
 
     if ~is_visual % Play end sound if needed
         sound(diffTrigger, getSoundFs());
     end
 
     pause(pauseBetweenTrials)
-end
+end        % End trial loop
 
+% Close simulink objects
+bdclose all
 
 end
 
@@ -110,6 +115,10 @@ end
 function [trainingSamples, diffTrigger, classNames] = loadTrainingSamples(triggerBankFolder, is_visual)
 % loadTrainingSamples - load images / audio for training
 %
+% INPUT:
+%   triggerBankFolder - folder to load triggers from
+%   is_visal - 
+% 
 % OUTPUT:
 %   trainingSamples - struct of all the triggers loaded according to their class index
 %   diffTrigger - This is an image/sound that isn't part of the triggers but is needed for training.
@@ -148,7 +157,7 @@ end
 
 function [name] = getClassNameFromFileName(file_name)
 % getClassNameFromFileName - extract the class name from the file name.
-% !!! All trigger file names should follow this template:trigger<idx>_<name>.<file type> !!!
+% !!! All trigger file names should follow this template:  trigger<idx>_<name>.<file type> !!!
     file_name = file_name{1};
     start_loc = strfind(file_name, '_');
     start_loc = start_loc(1);
@@ -160,6 +169,17 @@ end
 %% Trigger activation
 
 function [time] = activateVisualTrigger(trainingImages, idx, jitterImage, timeBeforeJitter)
+% activateVisualTrigger - shows a visual trigger
+%
+% INPUT:
+%   trainingImages - struct of all images
+%   idx - index of image to display
+%   jitterImage - the image to show when the trigger ends
+%   timeBeforeJitter - how long the visual trigger will be
+% 
+% OUTPUT:
+%   time - the time in ns when the trigger appeared on screen
+    
     cla
     dispalyImageWrapper(trainingImages{idx})
     time = now;
@@ -168,6 +188,15 @@ function [time] = activateVisualTrigger(trainingImages, idx, jitterImage, timeBe
 end
 
 function [time] = activateAudioTrigger(trainingSounds, idx)
+% activateAudioTrigger - plays the audio trigger
+% 
+% INPUT:
+%     trainingSounds - struct of all training sounds
+%     idx - index of sound to play
+% 
+% OUTPUT:
+%     time - the time the sound trigger was played
+
     sound(trainingSounds{1, idx}, getSoundFs());
     time = now;
 end
@@ -211,6 +240,7 @@ function dispalyImageWrapper(image)
 end
 
 function displayText(textToDisplay)
+% This functions sets all necessary variables to dispaly text on figure
     cla
     text(0.5,0.5, textToDisplay, ...
          'HorizontalAlignment', 'Center', 'Color', 'white', 'FontSize', 40);

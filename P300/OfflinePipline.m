@@ -1,5 +1,9 @@
 function [] = OfflinePipline()
-% This functions starts the P300 offline training pipeline
+% OfflinePipline - This functions starts the P300 offline training pipeline
+% recording, preprocessing and creating a model
+
+%clear any previous open windows - hopefully.
+close all; clear; clc;
 
 baseFolder = uigetdir('C:/P300Recordings/', ...
     'Choose Desired Directory for Saving Recordings');
@@ -41,5 +45,11 @@ save(strcat(recordingFolder, 'parameters.mat'), 'parametersToSave')
 % processedEEG = Preprocessing(EEG, triggersTimes, trainingVec);
 % 
 % save(strcat(recordingFolder, 'processedEEG.mat'), 'processedEEG');
+
+%% Close all
+
+close all hidden
+
+
 end
 
