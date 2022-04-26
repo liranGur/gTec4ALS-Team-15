@@ -1,5 +1,5 @@
-function [Hz, trialLength, numClasses, subId, numTrials, timeBetweenTriggers, oddBallProb, ...
-    calibrationTime, pauseBetweenTrials] = ParametersGui(IMPobj)
+function [is_visual, trialLength, numClasses, subId, numTrials, timeBetweenTriggers, oddBallProb, ...
+    calibrationTime, pauseBetweenTrials, triggerBank, timeBeforeJitter] = ParametersGui()
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -30,7 +30,7 @@ GUI.title = uicontrol('style','text',...
 % Set confirmation button
 GUI.confirm = uicontrol('style','push',...
     'unit','normalized',...
-    'position',[0.75 0.08 0.2 0.1],...
+    'position',[0.72 0.08 0.2 0.1],...
     'string','Ok');
 
 % Set impedance button
@@ -39,18 +39,24 @@ GUI.Imp = uicontrol('style','push',...
     'position',[0.125 0.08 0.2 0.1],...
     'string','Impedance');
 
+% Select trigger bank folder
+GUI.bank = uicontrol('style','push',...
+    'unit','normalized',...
+    'position',[0.42 0.08 0.2 0.1],...
+    'string','Select Triggers');
+
 
 %% Configurations
 
 % Set subID text
 [GUI.subIDtxt, GUI.subID] = LabelEditorCreator(...
     [lables_col_x_pos(1) labels_row_y_pos(1) text_width text_height], 'Subject ID', ...
-    [editor_col_x_pos(1) editor_row_y_pos(1) editor_width editor_height], '000');
+    [editor_col_x_pos(1) editor_row_y_pos(1) editor_width editor_height], '100');
 
 %number of classes
 [GUI.nClstxt, GUI.nCls] = LabelEditorCreator(...
     [lables_col_x_pos(1) labels_row_y_pos(2) text_width text_height], '# of classes:',...
-    [editor_col_x_pos(1) editor_row_y_pos(2) editor_width editor_height], '2');
+    [editor_col_x_pos(1) editor_row_y_pos(2) editor_width editor_height], '3');
 
 %system calibration time
 [GUI.calibTxt, GUI.calibrationTime] = LabelEditorCreator(...
@@ -60,12 +66,12 @@ GUI.Imp = uicontrol('style','push',...
 %time between triggers 
 [GUI.timeBetweenTriggersTxt, GUI.timeBetweenTriggers] = LabelEditorCreator(...
     [lables_col_x_pos(2) labels_row_y_pos(1) text_width text_height], ['Time between ', sprintf('\n'), 'triggers(sec):'],...
-    [editor_col_x_pos(2) editor_row_y_pos(1) editor_width editor_height],'1');
+    [editor_col_x_pos(2) editor_row_y_pos(1) editor_width editor_height],'0.15,0.1');
 
 %Oddball Probability
 [GUI.trialLengthTxt, GUI.trialLength] = LabelEditorCreator(...
     [lables_col_x_pos(2) labels_row_y_pos(2) text_width text_height], ['Trail Length', sprintf('\n'), '(# of triggers):'], ...
-    [editor_col_x_pos(2) editor_row_y_pos(2) editor_width editor_height], '20');
+    [editor_col_x_pos(2) editor_row_y_pos(2) editor_width editor_height], '40');
 
 %pause between trials
 [GUI.pauseBetweenTrialsTxt, GUI.pauseBetweenTrials] = LabelEditorCreator(...
@@ -78,24 +84,26 @@ GUI.Imp = uicontrol('style','push',...
     [editor_col_x_pos(3) editor_row_y_pos(1) editor_width editor_height],'10');
 
 
-%num of trials text
+% Oddball Probability
 [GUI.oddBallProbTxt, GUI.oddBallProb] = LabelEditorCreator(...
     [lables_col_x_pos(3) labels_row_y_pos(2) text_width text_height],'Oddball probability:', ...
-    [editor_col_x_pos(3) editor_row_y_pos(2) editor_width editor_height],'0.2');
+    [editor_col_x_pos(3) editor_row_y_pos(2) editor_width editor_height],'0.14');
 
 
-% Set Hz
-GUI.Hztxt = uicontrol('style','text',...
+% Set visual / auditory options
+GUI.avText = uicontrol('style','text',...
     'unit','normalized',...
     'position',[lables_col_x_pos(3) labels_row_y_pos(3) text_width editor_height],...
-    'string','Sampling rate:');
-GUI.Hz    = uicontrol('style','popupmenu',...
+    'string','Train Mode:');
+GUI.avType    = uicontrol('style','popupmenu',...
     'unit','normalized',...
     'position',[editor_col_x_pos(3) (editor_row_y_pos(3)-0.02) editor_width editor_height],...
-    'string',['512';'256']);
+    'string',['Visual  ';'Auditory';]);
 
 %% Callbacks
-set(GUI.Imp,'callback',{@GUIFiles.OpenImpedanceCallback, IMPobj});
+triggerBank{1}= strcat(pwd, '\TriggersBank\visual-3-classes');
+set(GUI.Imp,'callback',{@GUIFiles.OpenImpedanceCallback});
+set(GUI.bank,'callback',{@GUIFiles.SelectTriggerBankCallback,triggerBank})
 
 % This function is needed because I couldn't call uiresume as a direct
 % callback from the GUI button
@@ -108,25 +116,30 @@ set(GUI.confirm, 'callback', {@releaseGui});
 uiwait(GUI.fh);
 
 %% Extract user input parameters
-% Extract sampling rate value
-posHz = GUI.Hz.Value;
-Hz    = str2double(GUI.Hz.String(posHz,:));
+
+selectedMode = GUI.avType.Value;
+is_visual    = selectedMode == 1;
 trialLength = str2double(GUI.trialLength.String);
 numClasses = str2double(GUI.nCls.String);
 subId = str2double(GUI.subID.String);
 numTrials = str2double(GUI.nTrial.String);
-timeBetweenTriggers = str2double(GUI.timeBetweenTriggers.String);
-oddBallProb = str2double(GUI.oddBallProb);
-calibrationTime = str2double(GUI.calibrationTime);
-pauseBetweenTrials = str2double(GUI.pauseBetweenTrials);
+
+oddBallProb = str2double(GUI.oddBallProb.String);
+calibrationTime = str2double(GUI.calibrationTime.String);
+triggerBank = triggerBank{1};
+pauseBetweenTrials = str2double(GUI.pauseBetweenTrials.String);
+
+pauseResponse = GUI.timeBetweenTriggers.String;
+splitIdx = strfind(pauseResponse, ',');
+timeBetweenTriggers = str2double(pauseResponse(1:splitIdx-1));
+timeBeforeJitter = str2double(pauseResponse(splitIdx+1:length(pauseResponse)));
 
 close(GUI.fh);
 
 end
 
 function [label, editor] = LabelEditorCreator(label_pos, lablel_text, editor_pos, editor_text)
-%LABELEDITORCREATOR Summary of this function goes here
-%   Detailed explanation goes here
+% LabelEditorCreator - create label and editor text field
 
 label = uicontrol('style','text',...
                   'unit','normalized',...

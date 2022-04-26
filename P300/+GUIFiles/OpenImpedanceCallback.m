@@ -1,9 +1,15 @@
-function Impedance_call(varargin)
+function OpenImpedanceCallback(varargin)
 % Callback for impedance pushbutton.
 
 % Extract Impedance object string
-IMPobj = varargin{1,end};
+[usbObj, scopeObj, impObj, ampObj] = Utils.CreateSimulinkObj();
 
-% Open Impedance object
-open_system(IMPobj);
+set_param(usbObj,'Location',[1300 199 1301 200])
+
+open_system(impObj);
+
+% GUIFiles.CloseSimulinkDialog();
+% open_system(scopeObj);
+close_system(impObj);
+
 end
