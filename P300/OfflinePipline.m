@@ -46,7 +46,7 @@ mkdir(recordingFolder);
 
 processedEEG = Preprocessing(EEG, triggersTimes, trainingVec);
 % 
-% save(strcat(recordingFolder, 'processedEEG.mat'), 'processedEEG');
+save(strcat(recordingFolder, 'processedEEG.mat'), 'processedEEG');
 
 %% Close all
 
