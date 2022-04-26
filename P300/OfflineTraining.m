@@ -1,4 +1,4 @@
-function [EEG, fullTrainingVec, expectedClasses, triggersTime] = ... 
+function [EEG, fullTrainingVec, expectedClasses, triggersTime, backupTimes] = ... 
     OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, timeBeforeJitter,...
                     numClasses, oddBallProb, triggersInTrial, ...
                     triggerBankFolder, is_visual)
@@ -51,6 +51,7 @@ fullTrainingVec = ones(numTrials, triggersInTrial);
 expectedClasses = zeros(numTrials, 1);
 EEG = zeros(numTrials, Utils.Config.eegChannels, eegSampleSize);
 triggersTime = zeros(numTrials, (triggersInTrial+1));
+backupTimes = zeros(numTrials, (triggersInTrial+1));
 
 %% Training
 
@@ -75,13 +76,16 @@ for currTrial = 1:numTrials
 
     pause(Utils.Config.preTrialPause);    
     
+    tic;
     for currTrigger=1:triggersInTrial 
         currClass = trainingVec(currTrigger);
-        currTriggerTime = activateTrigger(trainingSamples, currClass);
+        [pre_time, currTriggerTime] = activateTrigger(trainingSamples, currClass);
         triggersTime(currTrial, currTrigger) = currTriggerTime;
+        backupTimes(currTrial, currTrigger) = pre_time;
         pause(timeBetweenTriggers + rand*Utils.Config.maxRandomTimeBetweenTriggers)  % use random time diff between triggers
     end
     
+     backupTimes(currTrial, (triggersInTrial+1)) = posixtime(datetime('now'));
     EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
     triggersTime(currTrial,(triggersInTrial+1)) = posixtime(datetime('now'));    
     
@@ -168,7 +172,7 @@ end
 
 %% Trigger activation
 
-function [time] = activateVisualTrigger(trainingImages, idx, jitterImage, timeBeforeJitter)
+function [time, pre_time] = activateVisualTrigger(trainingImages, idx, jitterImage, timeBeforeJitter)
 % activateVisualTrigger - shows a visual trigger
 %
 % INPUT:
@@ -181,8 +185,10 @@ function [time] = activateVisualTrigger(trainingImages, idx, jitterImage, timeBe
 %   time - the time in ns when the trigger appeared on screen
     
     cla
+    pre_time = posixtime(datetime('now'));
     dispalyImageWrapper(trainingImages{idx})
     time = posixtime(datetime('now'));
+%     toc
     pause(timeBeforeJitter);
     dispalyImageWrapper(jitterImage);
 end

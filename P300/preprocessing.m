@@ -12,16 +12,16 @@ function [EEG] = Preprocessing(EEG, triggersTime, trainingVector)
     
     
     % This code needs to be fixed to new EEG shape
-    EEG = pop_eegfiltnew(EEG, 'hicutoff', Utils.Config.highLim,'plotfreqz',1); % low pass
-    EEG = pop_eegfiltnew(EEG, 'locutoff',Utils.Config.lowLim,'plotfreqz',1);  % high pass
-    
+%     EEG = pop_eegfiltnew(EEG, 'hicutoff', Utils.Config.highLim,'plotfreqz',1); % low pass
+%     EEG = pop_eegfiltnew(EEG, 'locutoff',Utils.Config.lowLim,'plotfreqz',1);  % high pass
+%     
     % Spliting the trials must be the first thing to happen to allow for correct splitting because splitting is based on time stamps
     EEG = splitTrials(EEG, triggersTime);
     
     % downsample
-    if Hz > Utils.Config.down_srate
-        EEG = pop_resample(EEG, Utils.Config.down_srate);
-    end
+%     if Hz > Utils.Config.down_srate
+%         EEG = pop_resample(EEG, Utils.Config.down_srate);
+%     end
     
 %     %Zero-phase digital filtering
 %     EEG = filtfilt(EEG,b,a); %ask Ophir
