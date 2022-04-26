@@ -83,6 +83,7 @@ end
 % for iSection =       %TODO - subset data into sections and find max for each section
 
 hold off
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ERP
 %Compute ERP
 for elec_i = 1:elec_N
