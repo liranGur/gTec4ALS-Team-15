@@ -17,13 +17,14 @@ function [EEG, meanTrigs] = Preprocessing(EEG, triggersTime, trainingVector)
 
     % Spliting the trials must be the first thing to happen to allow for correct splitting because splitting is based on time stamps
     EEG = splitTrials(EEG, triggersTime);
+    [numTrials, ~, eegChannels, windowSize] = size(EEG);
 
     % Average trigger signals per class
     classes = unique(trainingVector);
     meanTrigs = zeros(numTrials, length(classes), eegChannels, windowSize);
     for currTrial=1:numTrials    
-        for class = classes
-            meanTrigs(currTrial,class,:,:) = mean(EEG(currTrial,trainingVector(currTrial) == class,:,:),2);
+        for class = classes.'
+            meanTrigs(currTrial,class,:,:) = mean(EEG(currTrial,trainingVector(currTrial,:) == class,:,:),2);
         end
     end
     
@@ -39,52 +40,5 @@ end
     %Median Filtering
     %Facet Method
 
-function [splitEeg] = splitTrials(EEG, triggersTimes)
-% Split all the trials to triggers, size is set according to Utils.Config
-% 
-% INPUT:
-%   EEG - full EEG recording with shape: ????
-%   triggersTimes - time each trigger was activated and the trial recording end time
-% 
-% OUTPUT:
-%   res - the EEG split into triggers, shape: #trials, #triggers_in_trial, #eeg_channels, size of trigger window)
-% 
 
-    % Extract recording info & constants
-    Hz = Utils.Config.Hz;
-    eegShape = size(EEG);
-    totalNumSamples = eegShape(3);
-    numTrials = eegShape(1);
-    eegChannels = eegShape(2);
-    totalRecordingTime = (totalNumSamples / Hz);
-    numTriggersInTrial = size(triggersTimes);
-    numTriggersInTrial = numTriggersInTrial(2) - 1;
-    preTriggerWindowSize = round(Utils.Config.preTriggerRecTime * Hz);
-    postTriggerWindowSize = round(Utils.Config.triggerWindowTime * Hz);
-    windowSize = preTriggerWindowSize + postTriggerWindowSize ;
-    
-    % split to triggers
-    splitEeg = zeros(numTrials, numTriggersInTrial, eegChannels, windowSize);
-    for currTrial=1:numTrials
-        currTrialEndTime = triggersTimes(currTrial, numTriggersInTrial + 1);
-        currTrialStartTime = currTrialEndTime - totalRecordingTime;
-        for currTrigger=1:numTriggersInTrial
-            currTriggerStartSampleIdx = round(triggersTimes(currTrial, currTrigger) - currTrialStartTime);
-            windowStartSampleIdx = currTriggerStartSampleIdx - preTriggerWindowSize;
-            if windowStartSampleIdx < 1
-                windowStartSampleIdx = 1;
-            end
-            windowEndSampleIdx = currTriggerStartSampleIdx + postTriggerWindowSize;
-            split = squeeze(EEG(currTrial, :, windowStartSampleIdx: windowEndSampleIdx));
-            split_size = size(split);
-            if split_size(2) < windowSize
-                final = zeros(eegChannels, windowSize);
-                final(:,1:split_size(2)) = split;
-                split = final;
-            end
-            splitEeg(currTrial, currTrigger, :, :) = split;
-        end
-    end
-end
-    
    
