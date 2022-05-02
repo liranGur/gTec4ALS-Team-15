@@ -50,7 +50,8 @@ def vis_raw_data(save_folder: str):
         fig = visualize_raw_eeg_single_trial(eeg_data[trial], triggers_time[trial], HZ, sequences[trial], title,
                                              labels[trial])
         fig.show()
+        break
 
 
 if __name__ == '__main__':
-    vis_raw_data('..\\..\\p300Recordings\\100')
+    vis_raw_data('C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\p300Recordings\\100\\26-Apr-2022 12-30-27')

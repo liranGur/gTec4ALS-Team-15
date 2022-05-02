@@ -25,8 +25,8 @@ function [EEG, fullTrainingVec, expectedClasses, triggersTime, backupTimes] = ..
 
 
 %% Set up parameters
-trialTime = triggersInTrial*timeBetweenTriggers + Utils.Config.pretrialSafetyBuffer;
-eegSampleSize = round(Utils.Config.Hz*trialTime); 
+trialTime = triggersInTrial*(timeBetweenTriggers+Utils.Config.maxRandomTimeBetweenTriggers)+ Utils.Config.pretrialSafetyBuffer;
+eegSampleSize = ceil(Utils.Config.Hz*trialTime); 
 recordingBuffer = setUpRecordingSimulink(Utils.Config.Hz, eegSampleSize);
 
 %% Load Train Samples

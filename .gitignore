@@ -16,3 +16,4 @@ g.tec Softwares/*
 *catboost_info*
 Python-TestModels/data/*
 *.mat
+*.zip
