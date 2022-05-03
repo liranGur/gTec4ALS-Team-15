@@ -45,9 +45,11 @@ save(strcat(recordingFolder, 'parameters.mat'), 'parametersToSave')
 
 %% PreProcessing
 
-% processedEEG = Preprocessing(EEG, triggersTimes, trainingVec);
-% % 
-% save(strcat(recordingFolder, 'processedEEG.mat'), 'processedEEG');
+[splitEEG, meanTriggers, splitDownSampledEeg] = Preprocessing(EEG, triggersTimes, trainingVec);
+
+save(strcat(recordingFolder, 'splitEEG.mat'), 'splitEEG');
+save(strcat(recordingFolder, 'meanTriggers.mat'), 'meanTriggers');
+save(strcat(recordingFolder, 'splitDownSampledEeg.mat'), 'splitDownSampledEeg');
 
 %% Close all
 
