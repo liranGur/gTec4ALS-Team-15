@@ -1,4 +1,4 @@
-function [EEG, meanTrigs] = Preprocessing(EEG, triggersTime, trainingVector)
+function [EEG, meanTrigs] = Preprocessing(EEG, triggersTimes, trainingVec)
 % Preprocessing - all the preprocessing done on recorded data
 %
 %INPUT:
@@ -16,15 +16,15 @@ function [EEG, meanTrigs] = Preprocessing(EEG, triggersTime, trainingVector)
     EEG = pop_eegfiltnew(EEG, 'locutoff',Utils.Config.lowLim,'plotfreqz',1);  % high pass
 
     % Spliting the trials must be the first thing to happen to allow for correct splitting because splitting is based on time stamps
-    EEG = splitTrials(EEG, triggersTime);
-    [numTrials, ~, eegChannels, windowSize] = size(EEG);
+    EEG1 = splitTrials(EEG, triggersTimes);
+    [numTrials, ~, eegChannels, windowSize] = size(EEG1);
 
     % Average trigger signals per class
-    classes = unique(trainingVector);
+    classes = unique(trainingVec);
     meanTrigs = zeros(numTrials, length(classes), eegChannels, windowSize);
     for currTrial=1:numTrials    
         for class = classes.'
-            meanTrigs(currTrial,class,:,:) = mean(EEG(currTrial,trainingVector(currTrial,:) == class,:,:),2);
+            meanTrigs(currTrial,class,:,:) = mean(EEG1(currTrial,trainingVec(currTrial,:) == class,:,:),2);
         end
     end
     

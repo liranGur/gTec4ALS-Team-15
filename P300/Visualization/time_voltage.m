@@ -4,10 +4,12 @@ recordingFolder = uigetdir('C:/Subjects/', ...
     'Choose Desired Directory');
 
 load(strcat(recordingFolder,'\EEG.mat'), 'EEG')
-load(strcat(recordingFolder,'\trainingVec.mat'), 'trainingVec')
+load(strcat(recordingFolder,'\trainingSequences.mat'), 'trainingVec')
 
 %% Setting parameters
-data = EEG(1,:,12);               %TODO - change to desired data
+data = meanTrigs(1,:,:,:);               %TODO - change to desired data
+data = squeeze(data);
+
 Fs = 512;
 elec_name = {'C3', 'C4', 'Cz'};   %TODO - choose electrodes
 elec_idx = [5, 9 ,7];             %TODO - choose electrodes indices
@@ -15,10 +17,8 @@ Font = struct('axesmall', 13,...
     'axebig', 16,...
     'label', 14,...
     'title', 18); %Axes font size
-L = size(data,2);
+L = size(data,3);
 timeVec = (0:L-1)/Fs; %Time vector in seconds for all samples in signal
-trainingVec = [timeVec(1)+0.3:0.6:timeVec(end)];  % example to see the
-% code works
 fig_sz = [1.28764,2.1343,30.8857,14.19049];
 
 %MATLAB R2019b
@@ -71,12 +71,11 @@ xlabel('Time [sec]')
 set(gca,'FontSize',Font.axebig) %Axes font size
 
 % Oddball vertical lines
-verticalLines = arrayfun(@(x) xline(x, '--',...
-    'LabelOrientation', 'horizontal'),...
-    trainingVec);  % plots a vertical line for each value in "trainingVec"
+verticalLines = arrayfun(@(x) xline(x, '--', 'LabelOrientation', 'horizontal'),...
+    XXXX);  % plots a vertical line for each value in "XXXX"
 
 for iLine = 1:length(verticalLines)  % defines label of each line to be its time value
-    verticalLines(iLine).Label = trainingVec(iLine);
+    verticalLines(iLine).Label = XXXX(iLine);
 end
 
 % Max EEG labels
