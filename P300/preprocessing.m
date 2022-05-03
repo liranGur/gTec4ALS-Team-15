@@ -31,7 +31,7 @@ function [splitEEG, meanTrigs, processedEEG] = Preprocessing(splitEEG, triggersT
         end
     end
     
-    downSampledWindowSize = round(windowSize*(Utils.Config.Hz/Utils.Config.downSampleRate));
+    downSampledWindowSize = round(windowSize*(Utils.Config.downSampleRate/Utils.Config.Hz));
     processedEEG = zeros(numTrials, length(classes), eegChannels, downSampledWindowSize);
   
     for i =1:length(meanTrigs)
@@ -44,8 +44,9 @@ function [splitEEG, meanTrigs, processedEEG] = Preprocessing(splitEEG, triggersT
             EEG_pass = squeeze(meanTrigs(i,j,:,:));
             %resampling
             if Utils.Config.Hz > Utils.Config.downSampleRate
-                EEG_pass = resample(EEG_pass, Utils.Config.downSampleRate, ...
+                EEG_pass_trans = resample(EEG_pass.', Utils.Config.downSampleRate, ...
                     Utils.Config.Hz);
+                EEG_pass = EEG_pass_trans.';
             end
             processedEEG(i,j,:,:) = EEG_pass;
         end
