@@ -22,6 +22,7 @@ function [splitEEG, meanTrigs, splitDownSampledEeg] = Preprocessing(splitEEG, tr
     splitEEG = splitTrials(splitEEG, triggersTime);
     [numTrials, ~, eegChannels, windowSize] = size(splitEEG);
     
+    % Average trigger signals per class
     classes = unique(trainingVector);
     meanTrigs = zeros(numTrials, length(classes), eegChannels, windowSize);
     for currTrial=1:numTrials    
@@ -31,23 +32,24 @@ function [splitEEG, meanTrigs, splitDownSampledEeg] = Preprocessing(splitEEG, tr
     end
     
     splitDownSampledEeg = splitEEG;
-    % Average trigger signals per class
+  
     for i =1:length(splitEEG)
         for j=1:length(splitEEG(i))
             %bandpass
-            EEG_tran = bandpass(splitEEG(i,j,:,:).', [0.5 40], Utils.Config.Hz);
+            EEG_mirror = [splitEEG(i,j,:,:) flip(splitEEG(i,j,:,:),2)];
+            EEG_tran = bandpass(EEG_mirror.', [0.5 40], Utils.Config.Hz);
             EEG_pass = EEG_tran.';
+            EEG_pass = EEG_pass(:,size(EEG_pass,2)/2);
+            %resampling
             if Utils.Config.Hz > Utils.Config.downSampleRate
                 EEG_pass(:, :) = resample(EEG_pass, Utils.Config.downSampleRate, ...
                     Utils.Config.Hz);
             end
             splitEEG(i,j,:,:) = EEG_pass;
         end
-    end
-    
+    end   
 end
-    %Median Filtering
-    %Facet Method
+
 
 
    
