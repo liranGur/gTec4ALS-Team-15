@@ -5,7 +5,7 @@ function [] = OfflinePipline()
 %clear any previous open windows - hopefully.
 close all; clear; clc;
 
-baseFolder = uigetdir('C:/P300Recordings/', ...
+baseFolder = uigetdir('G:\.shortcut-targets-by-id\1EX7NmYYOTBYtpFCqH7TOhhm4mY31oi1O\P300-Recordings', ...
     'Choose Desired Directory for Saving Recordings');
 
 %% Recording Parameter Setting
