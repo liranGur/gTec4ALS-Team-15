@@ -33,13 +33,16 @@ function [splitEEG, meanTrigs, splitDownSampledEeg] = Preprocessing(splitEEG, tr
     splitDownSampledEeg = splitEEG;
     % Average trigger signals per class
     for i =1:length(splitEEG)
-        %bandpass
-        EEG_tran = bandpass(splitEEG(i,:,:).', [0.5 70], Utils.Config.Hz);
-        if Utils.Config.Hz > Utils.Config.downSampleRate
-            EEG_tran(:, :) = resample(EEG_tran, Utils.Config.downSampleRate, ...
-                Utils.Config.Hz);
+        for j=1:length(splitEEG(i))
+            %bandpass
+            EEG_tran = bandpass(splitEEG(i,j,:,:).', [0.5 40], Utils.Config.Hz);
+            EEG_pass = EEG_tran.';
+            if Utils.Config.Hz > Utils.Config.downSampleRate
+                EEG_pass(:, :) = resample(EEG_pass, Utils.Config.downSampleRate, ...
+                    Utils.Config.Hz);
+            end
+            splitEEG(i,j,:,:) = EEG_pass;
         end
-        splitEEG(i, :, :) = EEG_tran.';
     end
     
 end
