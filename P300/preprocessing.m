@@ -23,11 +23,6 @@ function [splitEEG, meanTrigs, splitDownSampledEeg] = Preprocessing(splitEEG, tr
     [numTrials, ~, eegChannels, windowSize] = size(splitEEG);
     
     splitDownSampledEeg = splitEEG;
-    % downsample
-%     if Hz > Utils.Config.down_srate
-%         EEG = pop_resample(EEG, Utils.Config.down_srate);
-%     end
-
     % Average trigger signals per class
     classes = unique(trainingVector);
     meanTrigs = zeros(numTrials, length(classes), eegChannels, windowSize);
@@ -36,6 +31,12 @@ function [splitEEG, meanTrigs, splitDownSampledEeg] = Preprocessing(splitEEG, tr
             meanTrigs(currTrial,class,:,:) = mean(splitEEG(currTrial,trainingVector(currTrial,:) == class,:,:),2);
         end
     end
+    % downsample
+%     if Hz > Utils.Config.down_srate
+%         EEG = pop_resample(EEG, Utils.Config.down_srate);
+%     end
+
+
     
 %     %Zero-phase digital filtering
 %     EEG = filtfilt(EEG,b,a); %ask Ophir
