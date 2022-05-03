@@ -101,9 +101,10 @@ GUI.avType    = uicontrol('style','popupmenu',...
     'string',['Visual  ';'Auditory';]);
 
 %% Callbacks
-triggerBank{1}= strcat(pwd, '\TriggersBank\visual-3-classes');
+% triggerBank{1}= strcat(pwd, );
+GUI.bank.UserData = '\TriggersBank\visual-3-classes-white-square';
 set(GUI.Imp,'callback',{@GUIFiles.OpenImpedanceCallback});
-set(GUI.bank,'callback',{@GUIFiles.SelectTriggerBankCallback,triggerBank})
+set(GUI.bank,'callback',{@GUIFiles.SelectTriggerBankCallback, GUI})
 
 % This function is needed because I couldn't call uiresume as a direct
 % callback from the GUI button
@@ -126,7 +127,7 @@ numTrials = str2double(GUI.nTrial.String);
 
 oddBallProb = str2double(GUI.oddBallProb.String);
 calibrationTime = str2double(GUI.calibrationTime.String);
-triggerBank = triggerBank{1};
+triggerBank = GUI.bank.UserData;
 pauseBetweenTrials = str2double(GUI.pauseBetweenTrials.String);
 
 pauseResponse = GUI.timeBetweenTriggers.String;
