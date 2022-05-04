@@ -37,10 +37,6 @@ function [splitEEG, meanTrigs, processedEEG] = Preprocessing(splitEEG, triggersT
     for i =1:length(meanTrigs)
         for j=1:length(meanTrigs(i))
             %bandpass
-%             EEG_mirror = [squeeze(meanTrigs(i,j,:,:)) squeeze(flip(meanTrigs(i,j,:,:),2))];
-%             EEG_tran = bandpass(EEG_mirror.', [0.5 40], Utils.Config.Hz);
-%             EEG_pass = EEG_tran.';
-%             EEG_pass = EEG_pass(:,size(EEG_pass,2)/2);
             EEG_pass = squeeze(meanTrigs(i,j,:,:));
             %resampling
             if Utils.Config.Hz > Utils.Config.downSampleRate
@@ -53,6 +49,36 @@ function [splitEEG, meanTrigs, processedEEG] = Preprocessing(splitEEG, triggersT
     end   
 end
 
-
-
+% Tests
+%             EEG_mirror = [squeeze(meanTrigs(i,j,:,:)) squeeze(flip(meanTrigs(i,j,:,:),2))];
+% d = designfilt('bandpassiir', ...       % Response type
+%                'StopbandFrequency1',0.5, ...    % Frequency constraints
+%                'PassbandFrequency1',0.6, ...
+%                'PassbandFrequency2',1, ...
+%                'StopbandFrequency2',1.1, ...
+%                'StopbandAttenuation1',40, ...   % Magnitude constraints
+%                'PassbandRipple',1, ...
+%                'StopbandAttenuation2',50, ...
+%                'DesignMethod','ellip', ...      % Design method
+%                'MatchExactly','passband', ...   % Design method options
+%                'SampleRate',Utils.Config.Hz);               % Sample rate
+%             
+%             
+% x = wform' + 0.25*randn(500,1);
+% x(x < 0) = 0;
+% y = filtfilt(d,x);
+% y1 = filter(d,x);
+% y1 = 0;
+% axis([0 500 -1.25 1.25])
+% subplot(2,1,1)
+% plot([y y1])
+% title('Filtered Waveforms')
+% legend('Zero-phase Filtering','Conventional Filtering')
+% 
+% subplot(2,1,2)
+% plot(x)
+% title('Original Waveform')
+%             EEG_tran = bandpass(EEG_mirror.', [0.5 40], Utils.Config.Hz);
+%             EEG_pass = EEG_tran.';
+%             EEG_pass = EEG_pass(:,size(EEG_pass,2)/2);
    
