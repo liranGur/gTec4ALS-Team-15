@@ -51,6 +51,9 @@ save(strcat(recordingFolder, 'splitEEG.mat'), 'splitEEG');
 save(strcat(recordingFolder, 'meanTriggers.mat'), 'meanTriggers');
 save(strcat(recordingFolder, 'processedEEG.mat'), 'processedEEG');
 
+%% Run Model
+LDAModel(processedEEG, expectedClasses, [1 2 3 4], 1, 3);
+
 %% Close all
 
 close all hidden

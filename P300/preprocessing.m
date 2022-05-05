@@ -31,11 +31,11 @@ function [splitEEG, meanTrigs, processedEEG] = Preprocessing(splitEEG, triggersT
         end
     end
     
-    downSampledWindowSize = round(windowSize*(Utils.Config.downSampleRate/Utils.Config.Hz));
+    downSampledWindowSize = ceil(windowSize*(Utils.Config.downSampleRate/Utils.Config.Hz));
     processedEEG = zeros(numTrials, length(classes), eegChannels, downSampledWindowSize);
   
-    for i =1:length(meanTrigs)
-        for j=1:length(meanTrigs(i))
+    for i =1:size(meanTrigs, 1)
+        for j=1:size(meanTrigs, 2)
             %bandpass
             EEG_pass = squeeze(meanTrigs(i,j,:,:));
             %resampling
@@ -52,10 +52,10 @@ end
 % Tests
 %             EEG_mirror = [squeeze(meanTrigs(i,j,:,:)) squeeze(flip(meanTrigs(i,j,:,:),2))];
 % d = designfilt('bandpassiir', ...       % Response type
-%                'StopbandFrequency1',0.5, ...    % Frequency constraints
+%                'StopbandFrequency1',0.1, ...    % Frequency constraints
 %                'PassbandFrequency1',0.6, ...
-%                'PassbandFrequency2',1, ...
-%                'StopbandFrequency2',1.1, ...
+%                'PassbandFrequency2',0.9, ...
+%                'StopbandFrequency2',1, ...
 %                'StopbandAttenuation1',40, ...   % Magnitude constraints
 %                'PassbandRipple',1, ...
 %                'StopbandAttenuation2',50, ...
