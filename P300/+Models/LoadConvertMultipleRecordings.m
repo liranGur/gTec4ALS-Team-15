@@ -1,4 +1,15 @@
-function [data, targets, numFolds] = LoadConvertMultipleRecordings(folderPath, names)
+function [data, targets, numFolds] = LoadConvertMultipleRecordings(folderPath, names, forcePreprocess)
+% LoadConvertMultipleRecordings - load data from multiple recordings and create data for LDA/SVM models
+% 
+% INPUTS:
+%   - folderPath - base folder where other recordings folder are
+%   - names - names of folders to load data from
+%   - forcePreprocess - ignore preprocessedEEG data in folder and load raw data and preprocess here
+% 
+% OUTPUTS:
+%   - data - data for training and validation of model
+%   - targets - y target for model training size = rows in datt
+%   - numOfFolds - = length(names) 
 
     processedName = 'processedEEG.mat';
       

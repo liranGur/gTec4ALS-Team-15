@@ -1,4 +1,17 @@
 function [meanAcc, valAcc, predictions, targets] = TrainGenericModel(modelName, data, labels, numOfFolds)
+% TrainGenericModel - train and evaluate using K-Fold for LDA / SVM model
+% 
+% INPUTS:
+%   - modelName - name of model to train and eval. optiosns: LDA / SVM
+%   - data - train data for model
+%   - labels - train targest for model
+%   - numOfFolds - K folds num
+% 
+% OUTPUTS:
+%   - meanAcc - mean accuracy on validation of each fold
+%   - valAcc - struct with size: (1, numOfFolds) - accuracy on validation of each fold
+%   - predictions - struct with size: (1, numOfFolds) - predictions on validation of each fold
+%   - targets - struct with size: (1, numOfFolds) - targets of validation of each fold
   
     if strcmp(modelName, 'LDA')
         modelFunc = @LdaModel;
