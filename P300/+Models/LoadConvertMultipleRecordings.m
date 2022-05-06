@@ -17,14 +17,17 @@ function [data, targets, numFolds] = LoadConvertMultipleRecordings(folderPath, n
         loadFolder = strcat(folderPath, names{i});
         files = dir(loadFolder);
         hasProcessed = 0;
-        for j=1:length(files)
-            if strcmp(processedName,files(j).name) == 1
-                hasProcessed = 1;
-                break
+        
+        if ~forcePreprocess
+            for j=1:length(files)
+                if strcmp(processedName,files(j).name) == 1
+                    hasProcessed = 1;
+                    break
+                end
             end
         end
         
-        if hasProcessed == 1
+        if hasProcessed == 1 
             tmpProcessed = load(strcat(loadFolder,'\',processedName));
             allProcessed{i} = tmpProcessed.processedEEG;
         else
