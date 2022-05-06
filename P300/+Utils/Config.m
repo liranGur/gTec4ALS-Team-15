@@ -14,9 +14,9 @@ classdef Config
         %% Preprocessing paramters
         highLim = 100;                      % Low pass frequency filter value
         lowLim = 0;                         % High pass frequency filter value
-        downSampleRate = 40;                % Downsampling rate
+        downSampleRate = 60;                % Downsampling rate
         triggerWindowTime = 0.6;            % Size of each trigger EEG window (doesn't include time before trigger)
-        preTriggerRecTime = -0.15;          % Time before trigger to include in trigger window. Use negative values to start splitting some time after the trigger
+        preTriggerRecTime = -0.1;          % Time before trigger to include in trigger window. Use negative values to start splitting some time after the trigger
     end
     
     methods

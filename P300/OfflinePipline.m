@@ -51,8 +51,12 @@ save(strcat(recordingFolder, 'splitEEG.mat'), 'splitEEG');
 save(strcat(recordingFolder, 'meanTriggers.mat'), 'meanTriggers');
 save(strcat(recordingFolder, 'processedEEG.mat'), 'processedEEG');
 
-%% Run Model
-LDAModel(processedEEG, expectedClasses, [1 2 3 4], 1, 3);
+%% Models
+[data, targets] = Models.processedDataTo2dMatrixMeanChannels(processedEEG, expectedClasses, 1);
+[meanAcc, valAcc, predictions, targets] = Models.TrainGenericModel('SVM', data, targets, 2);
+
+% [data, targets, numFolds] = Models.LoadConvertMultipleRecordings('recordingFolder\100\', {'03-May-2022 12-08-47', '03-May-2022 12-16-04', '03-May-2022 12-20-48'});
+% [meanAcc, valAcc, predictions, targets] = Models.TrainGenericModel('SVM', data, targets, numFolds)
 
 %% Close all
 
