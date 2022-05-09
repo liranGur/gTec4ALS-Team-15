@@ -5,21 +5,27 @@ recordingFolder = uigetdir('C:/Subjects/', ...
 
 load(strcat(recordingFolder,'\EEG.mat'), 'EEG')
 load(strcat(recordingFolder,'\trainingSequences.mat'), 'trainingVec')
+load(strcat(recordingFolder,'\trainingLabels.mat'), 'expectedClasses')
 
 %% Setting parameters
-data = meanTrigs(1,:,:,:);               %TODO - change to desired data
+Hz = 512;
+L = size(meanTrigs,4);
+timeVec = (0:L-1)/Hz;           %Time vector in seconds
+timeVec = timeVec - Utils.Config.preTriggerRecTime;     % Adjust t=0 to be on trigger appearance
+trigidx = round(Utils.Config.preTriggerRecTime*Hz)+1;  % time index of trigger appearance
+
+currElec = 6;                   %TODO - choose which electrode to see
+data = meanTrigs(:,:,currElec,:);
 data = squeeze(data);
 
-Fs = 512;
-elec_name = {'C3', 'C4', 'Cz'};   %TODO - choose electrodes
-elec_idx = [5, 9 ,7];             %TODO - choose electrodes indices
+fig_sz = [1.28764,2.1343,30.8857,14.19049];
 Font = struct('axesmall', 13,...
     'axebig', 16,...
     'label', 14,...
     'title', 18); %Axes font size
-L = size(data,3);
-timeVec = (0:L-1)/Fs; %Time vector in seconds for all samples in signal
-fig_sz = [1.28764,2.1343,30.8857,14.19049];
+
+elec_name = {'C3', 'C4', 'Cz'};   %TODO - choose electrodes
+elec_idx = [5, 9 ,7];             %TODO - choose electrodes indices
 
 %MATLAB R2019b
 %
@@ -58,10 +64,57 @@ fig_sz = [1.28764,2.1343,30.8857,14.19049];
 %-----------------------------------------------------
 
 figure('units' , 'centimeters' , 'position' , fig_sz)
-sgtitle('raw EEG' , 'FontSize' , Font.title)
+sgtitle('P300' , 'FontSize' , Font.title)
 hold on
 % EEG graph
-[peaks, peakLocs] = findpeaks(data, Fs,...
+for currTrial = 1:numTrials
+    expClass = expectedClasses(currTrial);  % the class to focus on
+    currTrialData = data(currTrial,:,:);         % shows data from specific trial
+    pltData = squeeze(currTrialData);
+    [maxy, ind] = max(pltData(expClass,:));     % peak of data
+    
+    subplot(5,2,currTrial)
+    title(['Trial ', num2str(currTrial)])
+    plot(timeVec, pltData(1,:));           % plots data of baseline class
+    plot(timeVec,pltData(expClass,:),...
+        timeVec(ind),maxy,'or');    % plots data of expected class and peak
+    txt = num2str(timeVec(ind));
+    text(timeVec(ind+7),maxy*1.03,txt)  % timestamp label of peak
+    xline(timeVec(trigidx),'--k','trigger')     % marks trigger appearance
+end
+ylabel('Amplitude [\muV]')
+xlabel('Time [sec]')
+set(gca,'FontSize',Font.axebig)     %Axes font size
+legend('Baseline', 'Target')
+
+%% working code
+currElec = 5;                   %TODO - choose which electrode to see
+data = meanTrigs(:,:,currElec,:);
+data = squeeze(data);
+
+figure('units' , 'centimeters' , 'position' , fig_sz)
+sgtitle('P300' , 'FontSize' , Font.title)
+% EEG graph
+for currTrial = 1:numTrials
+    expClass = expectedClasses(currTrial);  % the class to focus on
+    currTrialData = data(currTrial,:,:);         % shows data from specific trial
+    pltData = squeeze(currTrialData);
+    [maxy, ind] = max(pltData(expClass,:));     % peak of data
+    
+    subplot(5,2,currTrial)
+    hold on
+    title(['Trial ', num2str(currTrial)])
+    plot(timeVec, pltData(1,:));           % plots data of baseline class
+    plot(timeVec,pltData(expClass,:),...
+        timeVec(ind),maxy,'or');    % plots data of expected class and peak
+    txt = num2str(timeVec(ind));
+    text(timeVec(ind+7),maxy*1.03,txt)  % timestamp label of peak
+    xline(timeVec(trigidx),'--k','trigger')     % marks trigger appearance
+end
+
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%% previous code %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+[peaks, peakLocs] = findpeaks(data, Hz,...
     'MinPeakDistance', 0.6);   % finds local maxima
 plot(timeVec, data, peakLocs, peaks, 'or')  % plots data and marks local maxima
 txt = string(peakLocs);
@@ -82,7 +135,7 @@ end
 % for iSection =       %TODO - subset data into sections and find max for each section
 
 hold off
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %% ERP
 %Compute ERP
 for elec_i = 1:elec_N
@@ -159,3 +212,4 @@ for curr = 1:3
     set(gca,'FontSize',Font.axebig) %Axes font size.
     
 end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
