@@ -30,7 +30,7 @@ function [splitEeg] = splitTrials(EEG, triggersTimes)
             if windowStartSampleIdx < 1
                 windowStartSampleIdx = 1;
             end
-            windowEndSampleIdx = currTriggerStartSampleIdx + postTriggerWindowSize;
+            windowEndSampleIdx = currTriggerStartSampleIdx + postTriggerWindowSize - 1;
             split = squeeze(EEG(currTrial, :, windowStartSampleIdx: windowEndSampleIdx));
             split_size = size(split);
             if split_size(2) < windowSize

@@ -2,10 +2,9 @@ function SelectTriggerBankCallback(varargin)
 %SELECTTRIGGERBANKCALLBACK Summary of this function goes here
 %   Detailed explanation goes here
 
-triggerBank = varargin{1,end};
-selectedBank = uigetdir(strcat(pwd, '\TriggersBank\visual-3-classes'), ...
+GUI = varargin{1,end};
+selectedBank = uigetdir(strcat(pwd, GUI.bank.UserData), ...
     'Choose Desired Trigger Bank');
-triggerBank{1} = selectedBank;
-
+GUI.bank.UserData = selectedBank;
 end
 

@@ -5,7 +5,7 @@ function [] = OfflinePipline()
 %clear any previous open windows - hopefully.
 close all; clear; clc;
 
-baseFolder = uigetdir('C:/P300Recordings/', ...
+baseFolder = uigetdir('G:\.shortcut-targets-by-id\1EX7NmYYOTBYtpFCqH7TOhhm4mY31oi1O\P300-Recordings', ...
     'Choose Desired Directory for Saving Recordings');
 
 %% Recording Parameter Setting
@@ -45,9 +45,18 @@ save(strcat(recordingFolder, 'parameters.mat'), 'parametersToSave')
 
 %% PreProcessing
 
-% processedEEG = Preprocessing(EEG, triggersTimes, trainingVec);
-% % 
-% save(strcat(recordingFolder, 'processedEEG.mat'), 'processedEEG');
+[splitEEG, meanTriggers, processedEEG] = preprocessing(EEG, triggersTimes, trainingVec);
+
+save(strcat(recordingFolder, 'splitEEG.mat'), 'splitEEG');
+save(strcat(recordingFolder, 'meanTriggers.mat'), 'meanTriggers');
+save(strcat(recordingFolder, 'processedEEG.mat'), 'processedEEG');
+
+%% Models
+[data, targets] = Models.processedDataTo2dMatrixMeanChannels(processedEEG, expectedClasses, 1);
+[meanAcc, valAcc, predictions, targets] = Models.TrainGenericModel('SVM', data, targets, 2);
+
+% [data, targets, numFolds] = Models.LoadConvertMultipleRecordings('recordingFolder\100\', {'03-May-2022 12-08-47', '03-May-2022 12-16-04', '03-May-2022 12-20-48'});
+% [meanAcc, valAcc, predictions, targets] = Models.TrainGenericModel('SVM', data, targets, numFolds)
 
 %% Close all
 

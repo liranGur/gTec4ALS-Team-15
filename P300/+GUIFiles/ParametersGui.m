@@ -66,7 +66,7 @@ GUI.bank = uicontrol('style','push',...
 %time between triggers 
 [GUI.timeBetweenTriggersTxt, GUI.timeBetweenTriggers] = LabelEditorCreator(...
     [lables_col_x_pos(2) labels_row_y_pos(1) text_width text_height], ['Time between ', sprintf('\n'), 'triggers(sec):'],...
-    [editor_col_x_pos(2) editor_row_y_pos(1) editor_width editor_height],'0.15,0.1');
+    [editor_col_x_pos(2) editor_row_y_pos(1) editor_width editor_height],'0.25,0.2');
 
 %Oddball Probability
 [GUI.trialLengthTxt, GUI.trialLength] = LabelEditorCreator(...
@@ -101,9 +101,10 @@ GUI.avType    = uicontrol('style','popupmenu',...
     'string',['Visual  ';'Auditory';]);
 
 %% Callbacks
-triggerBank{1}= strcat(pwd, '\TriggersBank\visual-3-classes');
+% triggerBank{1}= strcat(pwd, );
+GUI.bank.UserData = '.\TriggersBank\visual-3-classes-white-square';
 set(GUI.Imp,'callback',{@GUIFiles.OpenImpedanceCallback});
-set(GUI.bank,'callback',{@GUIFiles.SelectTriggerBankCallback,triggerBank})
+set(GUI.bank,'callback',{@GUIFiles.SelectTriggerBankCallback, GUI})
 
 % This function is needed because I couldn't call uiresume as a direct
 % callback from the GUI button
@@ -126,7 +127,7 @@ numTrials = str2double(GUI.nTrial.String);
 
 oddBallProb = str2double(GUI.oddBallProb.String);
 calibrationTime = str2double(GUI.calibrationTime.String);
-triggerBank = triggerBank{1};
+triggerBank = GUI.bank.UserData;
 pauseBetweenTrials = str2double(GUI.pauseBetweenTrials.String);
 
 pauseResponse = GUI.timeBetweenTriggers.String;
