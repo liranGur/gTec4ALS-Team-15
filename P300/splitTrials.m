@@ -17,6 +17,8 @@ function [splitEeg, badTriggers] = splitTrials(EEG, triggersTimes)
     preTriggerWindowSize = round(Utils.Config.preTriggerRecTime * Hz);
     postTriggerWindowSize = round(Utils.Config.triggerWindowTime * Hz);
     windowSize = preTriggerWindowSize + postTriggerWindowSize ;
+    triggerMoveTime = -1 * Utils.Config.preTriggerRecTime;
+    
     
     badIdx = 1;
     % split to triggers
@@ -27,6 +29,7 @@ function [splitEeg, badTriggers] = splitTrials(EEG, triggersTimes)
         for currTrigger=1:numTriggersInTrial
             currTriggerRealTime = triggersTimes(currTrial, currTrigger);
             triggerTimeFromStart = currTriggerRealTime - firstSampleRealTime;
+            triggerTimeFromStart = triggerTimeFromStart  + triggerMoveTime;
             currTriggerStartSampleIdx = round(triggerTimeFromStart*Hz);
             windowStartSampleIdx = currTriggerStartSampleIdx - preTriggerWindowSize;
             if windowStartSampleIdx < 1
