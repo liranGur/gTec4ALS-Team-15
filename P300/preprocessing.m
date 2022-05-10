@@ -1,10 +1,10 @@
-function [splitEEG, meanTrigs, processedEEG] = Preprocessing(splitEEG, triggersTime, trainingVector)
+function [splitEEG, meanTrigs, processedEEG] = Preprocessing(EEG, triggersTimes, trainingVec)
 % Preprocessing - all the preprocessing done on recorded data
 %
 %INPUT:
 %   EEG - raw EEG recorded. shape: (#trials, #channels, size of recording)
 %   triggersTime - time each trigger was activated and the end of recording time
-%   trainingVector - Triggers during training. shape: (# trials, #triggers_in_trial)
+%   trainingVec - Triggers during training. shape: (# trials, #triggers_in_trial)
 % 
 %OUTPUT:
 %   splitEEG - Splitted EEG, Shape: num of trials, num of triggers, eggChannels, sample size
@@ -18,26 +18,30 @@ function [splitEEG, meanTrigs, processedEEG] = Preprocessing(splitEEG, triggersT
 %     EEG = pop_eegfiltnew(EEG, 'hicutoff', Utils.Config.highLim,'plotfreqz',1); % low pass
 %     EEG = pop_eegfiltnew(EEG, 'locutoff',Utils.Config.lowLim,'plotfreqz',1);  % high pass
 
+    %% bandpass only
+%     bandpassEEG = zeros(size(EEG));
+%     for i =1:size(EEG, 1)
+%         %bandpass
+%         EEG_mirror = [squeeze(EEG(i,:,:)) squeeze(flip(EEG(i,:,:),2))];
+%         EEG_tran = bandpass(EEG_mirror.', [0.5 40], Utils.Config.Hz);
+%         EEG_pass = EEG_tran.';
+%         EEG_pass = EEG_pass(:,1:size(EEG_pass,2)/2);
+%         bandpassEEG(i,:,:) = EEG_pass;
+%     end   
 
-    [splitEEG, ~] = splitTrials(splitEEG, triggersTime);
+%%split
+    bandpassEEG = splitEEG;
+    [splitEEG, ~] = splitTrials(bandpassEEG, triggersTimes);
     [numTrials, ~, eegChannels, windowSize] = size(splitEEG);
     
-    % Average trigger signals per class
-    classes = unique(trainingVector);
-    meanTrigs = zeros(numTrials, length(classes), eegChannels, windowSize);
-    for currTrial=1:numTrials    
-        for class = classes.'
-            meanTrigs(currTrial,class,:,:) = mean(splitEEG(currTrial,trainingVector(currTrial,:) == class,:,:),2);
-        end
-    end
+    
     
     downSampledWindowSize = ceil(windowSize*(Utils.Config.downSampleRate/Utils.Config.Hz));
     processedEEG = zeros(numTrials, length(classes), eegChannels, downSampledWindowSize);
   
-    for i =1:size(meanTrigs, 1)
-        for j=1:size(meanTrigs, 2)
-            %bandpass
-            EEG_pass = squeeze(meanTrigs(i,j,:,:));
+  %%%% TODO  FIX  
+    for i =1:size(splitEEG, 1)
+        for j=1:size(splitEEG, 2)
             %resampling
             if Utils.Config.Hz > Utils.Config.downSampleRate
                 EEG_pass_trans = resample(EEG_pass.', Utils.Config.downSampleRate, ...
@@ -46,8 +50,21 @@ function [splitEEG, meanTrigs, processedEEG] = Preprocessing(splitEEG, triggersT
             end
             processedEEG(i,j,:,:) = EEG_pass;
         end
-    end   
+    end  
+
+    %% average on same trigger
+    %%%% TODO  FIX 
+% Average trigger signals per class
+    classes = unique(trainingVec);
+    meanTrigs = zeros(numTrials, length(classes), eegChannels, windowSize);
+    for currTrial=1:numTrials    
+        for class = classes.'
+            meanTrigs(currTrial,class,:,:) = mean(splitEEG(currTrial,trainingVec(currTrial,:) == class,:,:),2);
+        end
+    end
 end
+
+
 
 % Tests
 %             EEG_mirror = [squeeze(meanTrigs(i,j,:,:)) squeeze(flip(meanTrigs(i,j,:,:),2))];
