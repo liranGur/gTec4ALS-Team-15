@@ -25,16 +25,17 @@ function [EEG, fullTrainingVec, expectedClasses, triggersTime, backupTimes] = ..
 
 
 %% Set up parameters
-trialTime = triggersInTrial*(timeBetweenTriggers+Utils.Config.maxRandomTimeBetweenTriggers)+ Utils.Config.pretrialSafetyBuffer;
+trialTime = triggersInTrial*(timeBetweenTriggers+Utils.Config.maxRandomTimeBetweenTriggers) ...
+    + Utils.Config.pretrialSafetyBuffer + Utils.Config.pauseBeforeDump;
 eegSampleSize = ceil(Utils.Config.Hz*trialTime); 
-% recordingBuffer = setUpRecordingSimulink(Utils.Config.Hz, eegSampleSize);
+recordingBuffer = setUpRecordingSimulink(Utils.Config.Hz, eegSampleSize);
 
 %% Load Train Samples
 [trainingSamples, diffTrigger, classNames] = loadTrainingSamples(triggerBankFolder, is_visual);
 
 %% Setup & Callibrate System
 
-[fig, ax] = Utils.DisplaySetUp();
+[fig, ~] = Utils.DisplaySetUp();
 
 displayText(['System is calibrating.' sprintf('\n') ...
              'The training session will begin shortly.'])
@@ -85,7 +86,8 @@ for currTrial = 1:numTrials
         pause(timeBetweenTriggers + rand*Utils.Config.maxRandomTimeBetweenTriggers)  % use random time diff between triggers
     end
     
-     backupTimes(currTrial, (triggersInTrial+1)) = posixtime(datetime('now'));
+    pause(Utils.Config.pauseBeforeDump);
+    backupTimes(currTrial, (triggersInTrial+1)) = posixtime(datetime('now'));
     EEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
     triggersTime(currTrial,(triggersInTrial+1)) = posixtime(datetime('now'));    
     

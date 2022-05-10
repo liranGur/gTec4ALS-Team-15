@@ -38,7 +38,10 @@ end
 
 function [trainData, trainLabels, testData, testLabels] = SplitTrainTest(data, labels, foldNum, foldSize)
     numOfSamples = size(data,1);
-    testIdx = ((foldNum-1)*foldSize + 1) : (foldSize*foldNum);
+    endIdx = (foldSize*foldNum);
+    %Last fold will be smaller if numOfSamples/foldSize isn't a round number
+    if endIdx > numOfSamples; endIdx = numOfSamples; end
+    testIdx = ((foldNum-1)*foldSize + 1) : endIdx;
     trainIdx = setdiff(1:numOfSamples, testIdx);
     trainData = data(trainIdx,:);
     trainLabels = labels(trainIdx);

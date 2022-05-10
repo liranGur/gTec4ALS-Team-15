@@ -18,7 +18,7 @@ function [data, targets, numFolds] = LoadConvertMultipleRecordings(folderPath, n
         files = dir(loadFolder);
         hasProcessed = 0;
         
-        if ~forcePreprocess
+        if forcePreprocess
             for j=1:length(files)
                 if strcmp(processedName,files(j).name) == 1
                     hasProcessed = 1;

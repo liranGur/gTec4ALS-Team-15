@@ -19,7 +19,7 @@ function [splitEEG, meanTrigs, processedEEG] = Preprocessing(splitEEG, triggersT
 %     EEG = pop_eegfiltnew(EEG, 'locutoff',Utils.Config.lowLim,'plotfreqz',1);  % high pass
 
 
-    splitEEG = splitTrials(splitEEG, triggersTime);
+    [splitEEG, ~] = splitTrials(splitEEG, triggersTime);
     [numTrials, ~, eegChannels, windowSize] = size(splitEEG);
     
     % Average trigger signals per class
