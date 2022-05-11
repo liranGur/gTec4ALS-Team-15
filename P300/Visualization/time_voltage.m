@@ -6,23 +6,48 @@ recordingFolder = uigetdir('C:/Subjects/', ...
 load(strcat(recordingFolder,'\EEG.mat'), 'EEG')
 load(strcat(recordingFolder,'\trainingSequences.mat'), 'trainingVec')
 load(strcat(recordingFolder,'\trainingLabels.mat'), 'expectedClasses')
+load(strcat(recordingFolder,'\triggersTime.mat'), 'triggersTimes')
 
 %% Setting parameters
-Hz = 512;
-L = size(meanTrigs,4);
+Hz = Utils.Config.Hz;
+fpass = [1, 30];
+L = size(EEG,3);
 timeVec = (0:L-1)/Hz;           %Time vector in seconds
+fig_sz = [1.28764,2.1343,30.8857,14.19049];
+Font = struct('axesmall', 13,...
+    'axebig', 16,...
+    'label', 14,...
+    'title', 18); %Axes font size
+
+%% Bandpass
+fltrEEG = zeros(size(EEG));
+for currTrial = 1:size(EEG,1)
+    for currElec = 1:size(EEG,2)
+        sqzEEG = squeeze(EEG(currTrial,currElec,:));   % squeeze specific trial and electrode
+        bndpsEEG = bandpass(sqzEEG,fpass,Hz);   % bandpass data of specific trial and electrode
+        fltrEEG(currTrial,currElec,:) = bndpsEEG;   % add filtered vectors to array
+    end
+end
+
+% Visualization - 10 figures (1 for each trial)
+for currTrial = 1:size(fltrEEG,1)
+    figure('units' , 'centimeters' , 'position' , fig_sz)
+    sgtitle(['Trial ',num2str(currTrial)], 'FontSize', Font.title)
+    visEEG = squeeze(fltrEEG(currTrial,:,:));
+    for iPlot = 1:16
+        subplot(4,4,iPlot)
+        plot(timeVec,visEEG(iPlot,:))
+    end
+end
+%%
+
+
 timeVec = timeVec - Utils.Config.preTriggerRecTime;     % Adjust t=0 to be on trigger appearance
 trigidx = round(Utils.Config.preTriggerRecTime*Hz)+1;  % time index of trigger appearance
 
 currElec = 6;                   %TODO - choose which electrode to see
 data = meanTrigs(:,:,currElec,:);
 data = squeeze(data);
-
-fig_sz = [1.28764,2.1343,30.8857,14.19049];
-Font = struct('axesmall', 13,...
-    'axebig', 16,...
-    'label', 14,...
-    'title', 18); %Axes font size
 
 elec_name = {'C3', 'C4', 'Cz'};   %TODO - choose electrodes
 elec_idx = [5, 9 ,7];             %TODO - choose electrodes indices
@@ -88,7 +113,11 @@ set(gca,'FontSize',Font.axebig)     %Axes font size
 legend('Baseline', 'Target')
 
 %% working code
-currElec = 5;                   %TODO - choose which electrode to see
+Hz = 512;
+L = size(meanTrigs,4);
+timeVec = (0:L-1)/Hz; 
+
+currElec = 6;                   %TODO - choose which electrode to see
 data = meanTrigs(:,:,currElec,:);
 data = squeeze(data);
 
@@ -107,9 +136,9 @@ for currTrial = 1:numTrials
     plot(timeVec, pltData(1,:));           % plots data of baseline class
     plot(timeVec,pltData(expClass,:),...
         timeVec(ind),maxy,'or');    % plots data of expected class and peak
-    txt = num2str(timeVec(ind));
-    text(timeVec(ind+7),maxy*1.03,txt)  % timestamp label of peak
-    xline(timeVec(trigidx),'--k','trigger')     % marks trigger appearance
+%     txt = num2str(timeVec(ind));
+%     text(timeVec(ind+7),maxy*1.03,txt)  % timestamp label of peak
+%     xline(timeVec(trigidx),'--k','trigger')     NOT RELEVANT % marks trigger appearance
 end
 
 %%
