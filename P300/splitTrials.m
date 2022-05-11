@@ -17,7 +17,7 @@ function [splitEeg, badTriggers] = splitTrials(EEG, triggersTimes)
     preTriggerWindowSize = round(Utils.Config.preTriggerRecTime * Hz);
     postTriggerWindowSize = round(Utils.Config.triggerWindowTime * Hz);
     windowSize = preTriggerWindowSize + postTriggerWindowSize ;
-    triggerMoveTime = -1 * Utils.Config.preTriggerRecTime;
+    windowTimeDiffFromStart = -1 * Utils.Config.preTriggerRecTime;
     
     badTriggers = {};
     badIdx = 1;
@@ -28,9 +28,9 @@ function [splitEeg, badTriggers] = splitTrials(EEG, triggersTimes)
         firstSampleRealTime = currTrialEndTime - totalRecordingTime;
         for currTrigger=1:numTriggersInTrial
             currTriggerRealTime = triggersTimes(currTrial, currTrigger);
-            triggerTimeFromStart = currTriggerRealTime - firstSampleRealTime;
-            triggerTimeFromStart = triggerTimeFromStart  + triggerMoveTime;
-            currTriggerStartSampleIdx = round(triggerTimeFromStart*Hz);
+            triggerTimeDiffFromStart = currTriggerRealTime - firstSampleRealTime;
+            triggerStartSplitTime = triggerTimeDiffFromStart  + windowTimeDiffFromStart;
+            currTriggerStartSampleIdx = round(triggerStartSplitTime*Hz);
             windowStartSampleIdx = currTriggerStartSampleIdx - preTriggerWindowSize;
             if windowStartSampleIdx < 1
                 warning('The window start idx is less than 1 - probably recording buffer size is too small')
