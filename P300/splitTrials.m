@@ -19,7 +19,7 @@ function [splitEeg, badTriggers] = splitTrials(EEG, triggersTimes)
     windowSize = preTriggerWindowSize + postTriggerWindowSize ;
     triggerMoveTime = -1 * Utils.Config.preTriggerRecTime;
     
-    
+    badTriggers = {};
     badIdx = 1;
     % split to triggers
     splitEeg = zeros(numTrials, numTriggersInTrial, eegChannels, windowSize);

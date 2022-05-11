@@ -1,4 +1,4 @@
-function [splitEEG, meanTrigs, processedEEG] = Preprocessing(EEG, triggersTime, trainingVector)
+function [splitEEG, meanTrigs, processedEEG] = preprocessing(EEG, triggersTimes, trainingVector)
 % Preprocessing - all the preprocessing done on recorded data
 %
 %INPUT:
@@ -13,72 +13,55 @@ function [splitEEG, meanTrigs, processedEEG] = Preprocessing(EEG, triggersTime, 
 %   processedEEG - EEG after all preprocessing: low&high pass, split to triggres, mean triggres, downsmapling
 %                  shape: #trials, #classes, eegChannels, downsampled window size
 
-    
-    % This code needs to be fixed to new EEG shape
-%     EEG = pop_eegfiltnew(EEG, 'hicutoff', Utils.Config.highLim,'plotfreqz',1); % low pass
-%     EEG = pop_eegfiltnew(EEG, 'locutoff',Utils.Config.lowLim,'plotfreqz',1);  % high pass
+%% Bandpass TODO
+    bandpassedEEG = EEG;
 
-
-    [splitEEG, ~] = splitTrials(EEG, triggersTimes);
+%% Splitting
+    [splitEEG, ~] = splitTrials(bandpassedEEG, triggersTimes);
     [numTrials, ~, eegChannels, windowSize] = size(splitEEG);
-    
-    % Average trigger signals per class
     classes = unique(trainingVector);
+
+%% Downsample    
+    meanTrigs = averageTriggersByClass(splitEEG, numTrials, classes, eegChannels, windowSize, trainingVector);
+
+%% DownSampling
+    processedEEG = downsampleEEG(meanTrigs, numTrials, classes, eegChannels, windowSize);
+
+end
+
+function [meanTrigs] = averageTriggersByClass(splitEEG, numTrials, classes, eegChannels, windowSize, trainingVector)
+% averageTriggersByClass - average all triggers of same class in each trial
+% 
+% INPUTS:
+%   - splitEEG - EEG data with shape: #trials, #triggers, #channels, sample size
+
     meanTrigs = zeros(numTrials, length(classes), eegChannels, windowSize);
+    
     for currTrial=1:numTrials    
         for class = classes.'
             meanTrigs(currTrial,class,:,:) = mean(splitEEG(currTrial,trainingVector(currTrial,:) == class,:,:),2);
         end
     end
-    
+end
+
+function [processedEEG] = downsampleEEG(splitEEg, numTrials, classes, eegChannels, windowSize)
+% downSampleEEG - downsamples EEG
+% 
+% INPUTS:
+%   splitEEG - EEG data with shape: #trials, #triggers(can be mean triggers or anything else), #channels, sample size
+
     downSampledWindowSize = ceil(windowSize*(Utils.Config.downSampleRate/Utils.Config.Hz));
     processedEEG = zeros(numTrials, length(classes), eegChannels, downSampledWindowSize);
   
-    for i =1:size(meanTrigs, 1)
-        for j=1:size(meanTrigs, 2)
-            %bandpass
-            EEG_pass = squeeze(meanTrigs(i,j,:,:));
-            %resampling
+    for i =1:size(splitEEg, 1)
+        for j=1:size(splitEEg, 2)
+            squeezedEEG = squeeze(splitEEg(i,j,:,:));
             if Utils.Config.Hz > Utils.Config.downSampleRate
-                EEG_pass_trans = resample(EEG_pass.', Utils.Config.downSampleRate, ...
+                EEG_pass_trans = resample(squeezedEEG.', Utils.Config.downSampleRate, ...
                     Utils.Config.Hz);
-                EEG_pass = EEG_pass_trans.';
+                squeezedEEG = EEG_pass_trans.';
             end
-            processedEEG(i,j,:,:) = EEG_pass;
+            processedEEG(i,j,:,:) = squeezedEEG;
         end
-    end   
+    end 
 end
-
-% Tests
-%             EEG_mirror = [squeeze(meanTrigs(i,j,:,:)) squeeze(flip(meanTrigs(i,j,:,:),2))];
-% d = designfilt('bandpassiir', ...       % Response type
-%                'StopbandFrequency1',0.1, ...    % Frequency constraints
-%                'PassbandFrequency1',0.6, ...
-%                'PassbandFrequency2',0.9, ...
-%                'StopbandFrequency2',1, ...
-%                'StopbandAttenuation1',40, ...   % Magnitude constraints
-%                'PassbandRipple',1, ...
-%                'StopbandAttenuation2',50, ...
-%                'DesignMethod','ellip', ...      % Design method
-%                'MatchExactly','passband', ...   % Design method options
-%                'SampleRate',Utils.Config.Hz);               % Sample rate
-%             
-%             
-% x = wform' + 0.25*randn(500,1);
-% x(x < 0) = 0;
-% y = filtfilt(d,x);
-% y1 = filter(d,x);
-% y1 = 0;
-% axis([0 500 -1.25 1.25])
-% subplot(2,1,1)
-% plot([y y1])
-% title('Filtered Waveforms')
-% legend('Zero-phase Filtering','Conventional Filtering')
-% 
-% subplot(2,1,2)
-% plot(x)
-% title('Original Waveform')
-%             EEG_tran = bandpass(EEG_mirror.', [0.5 40], Utils.Config.Hz);
-%             EEG_pass = EEG_tran.';
-%             EEG_pass = EEG_pass(:,size(EEG_pass,2)/2);
-   
