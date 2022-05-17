@@ -97,7 +97,7 @@ for currTrial = 1:numTrials
                      'Pausing for: ' int2str(pauseBetweenTrials) ' seconds before next trial.'];
     else
         endTrialTxt = ['Finished Last Trial - Good Job' sprintf('\n')  ...
-            'Starts processing the data please wait for window to close'];
+            'Processing the data please wait for this window to close'];
     end
     
     set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
