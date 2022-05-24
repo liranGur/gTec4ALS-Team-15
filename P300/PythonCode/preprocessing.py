@@ -105,7 +105,7 @@ def load_data(folder_path: str):
 def preprocess(folder_path):
     low_lim = 0.5
     high_lim = 40
-    pre_trigger_time = 0.2
+    pre_trigger_time = -0.2
     post_trigger_time = 1
     down_sample_factor = 60
 
@@ -125,5 +125,5 @@ def preprocess(folder_path):
 
 
 if __name__ == '__main__':
-    folder_path_ = 'C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\100\\03-May-2022 12-08-47'
+    folder_path_ = 'C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\100\\19-May-2022 14-47-04'
     preprocess(folder_path_)

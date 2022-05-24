@@ -107,6 +107,8 @@ for currTrial = 1:numTrials
         sound(diffTrigger, getSoundFs());
     end
 
+%     GUIFiles.SuspendRun();
+%     input('')
     pause(pauseBetweenTrials)
 end        % End trial loop
 

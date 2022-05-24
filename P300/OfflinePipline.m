@@ -59,7 +59,7 @@ save(strcat(recordingFolder, 'processedEEG.mat'), 'processedEEG');
 
 %% Models
 [data, targets] = Models.processedDataTo2dMatrixMeanChannels(processedEEG, trainingLabels, 1);
-[meanAcc, valAcc, predictions, targets] = Models.TrainGenericModel('SVM', data, targets, 2);
+[meanAcc, valAcc, predictions, targets] = Models.TrainGenericModel('SVM', data, targets, 3);
 
 save(strcat(recordingFolder, 'meanAcc.mat'), 'meanAcc');
 save(strcat(recordingFolder, 'valAcc.mat'), 'valAcc');
