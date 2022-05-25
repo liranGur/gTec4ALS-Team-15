@@ -1,10 +1,12 @@
-function [splitEEG, meanTrigs, processedEEG] = preprocessing(EEG, triggersTimes, trainingVector)
+function [splitEEG, meanTrigs, processedEEG] = preprocessing(EEG, triggersTimes, trainingVector, preTriggerRecTime, triggerWindowTime)
 % Preprocessing - all the preprocessing done on recorded data
 %
 %INPUT:
 %   EEG - raw EEG recorded. shape: (#trials, #channels, size of recording)
 %   triggersTime - time each trigger was activated and the end of recording time
 %   trainingVector - Triggers during training. shape: (# trials, #triggers_in_trial)
+%   preTriggerRecTime - time to keep of recording before trigger is activated (negative value means tha window will start after trigger)
+%   triggerWindowTime - time to keep of recording after trigger is activated 
 % 
 %OUTPUT:
 %   splitEEG - Splitted EEG, Shape: num of trials, num of triggers, eggChannels, sample size
@@ -17,7 +19,7 @@ function [splitEEG, meanTrigs, processedEEG] = preprocessing(EEG, triggersTimes,
     bandpassedEEG = EEG;
 
 %% Splitting
-    [splitEEG, ~] = splitTrials(bandpassedEEG, triggersTimes);
+    [splitEEG, ~] = splitTrials(bandpassedEEG, triggersTimes, preTriggerRecTime, triggerWindowTime);
     [numTrials, ~, eegChannels, windowSize] = size(splitEEG);
     classes = unique(trainingVector);
 

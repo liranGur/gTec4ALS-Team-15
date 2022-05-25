@@ -35,8 +35,6 @@ function [meanAcc, valAcc, predictions, targets, finalModel] = TrainGenericModel
     
     meanAcc = mean(valAcc);
     
-    finalModel = 
-    
 end
 
 

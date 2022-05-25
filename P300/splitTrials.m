@@ -1,9 +1,11 @@
-function [splitEeg, badTriggers] = splitTrials(EEG, triggersTimes)
-% Split all the trials to triggers, size of triggers windows is set according to Utils.Config
+function [splitEeg, badTriggers] = splitTrials(EEG, triggersTimes, preTriggerRecTime, triggerWindowTime)
+% Split all the trials to triggers
 % 
 % INPUT:
 %   EEG - full EEG recording with shape: ????
 %   triggersTimes - time each trigger was activated and the trial recording end time
+%   preTriggerRecTime - time to keep of recording before trigger is activated (negative value means tha window will start after trigger)
+%   triggerWindowTime - time to keep of recording after trigger is activated 
 % 
 % OUTPUT:
 %   res - the EEG split into triggers, shape: #trials, #triggers_in_trial, #eeg_channels, size of trigger window)
@@ -14,10 +16,10 @@ function [splitEeg, badTriggers] = splitTrials(EEG, triggersTimes)
     [numTrials, eegChannels, totalNumSamples] = size(EEG);
     totalRecordingTime = (totalNumSamples / Hz);
     numTriggersInTrial = size(triggersTimes, 2) - 1;
-    preTriggerWindowSize = round(Utils.Config.preTriggerRecTime * Hz);
-    postTriggerWindowSize = round(Utils.Config.triggerWindowTime * Hz);
+    preTriggerWindowSize = round(preTriggerRecTime * Hz);
+    postTriggerWindowSize = round(triggerWindowTime * Hz);
     windowSize = preTriggerWindowSize + postTriggerWindowSize ;
-    windowTimeDiffFromStart = -1 * Utils.Config.preTriggerRecTime;
+    windowTimeDiffFromStart = -1 * preTriggerRecTime;
     
     badTriggers = {};
     badIdx = 1;

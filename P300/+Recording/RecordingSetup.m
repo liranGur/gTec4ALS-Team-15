@@ -1,6 +1,26 @@
 function [eegSampleSize, recordingBuffer, trainingSamples, diffTrigger, classNames, activateTrigger, fig] = ...
     RecordingSetup(timeBetweenTriggers, calibrationTime, triggersInTrial, triggerBankFolder, timeBeforeJitter, is_visual)
-%RecordingSetup  inital setup function for running online & offline traiing
+%RecordingSetup  inital setup function for running online & offline
+% training it loads all needed data, creates simulink buffer and calibarates
+% the system
+% 
+% INPUT:
+%   - timeBetweenTriggers - time to pause between triggers (doesn't include random time)
+%   - calibrationTime - system calibration time in seconds
+%   - triggersInTrial - number of triggers shown in the trial
+%   - triggerBankFolder - relative/absolute path to selected trigger bank (folder with images/audio for training)
+%   - timeBeforeJitter - time in seconds before mark jitter happens (jitter blank screen or removing the selected trigger) This is relevant only for visual
+%   - is_visual - visual or auditory P300
+% 
+% OUTPUT:
+%   - eegSampleSize -  size of the eeg buffer for the trial
+%   - recordingBuffer - the simulink object for dumping the EEG buffer
+%   - trainingSamples - all the training triggers to be shown/played. This is an array with size of numClasses
+%   - diffTrigger - the differnt triggers (not idle) that is presented to the subject. In visual this is a blank screen. In auditoary this is the end sound.
+%   - classNames - strcut with the name of the classes
+%   - activateTrigger - function to activate trigger visual or auditory. It recives 2 prameters: the training samples struct and the index of the trigger to activate
+%   - fig - the figure used to show triggers and text to the user
+% 
 
 
 %% Set up parameters

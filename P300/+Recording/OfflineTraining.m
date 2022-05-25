@@ -5,23 +5,23 @@ function [EEG, fullTrainingVec, expectedClasses, triggersTime, backupTimes] = ..
 % OfflineTraining - This function is responsible for offline training and
 % recording EEG data
 % INPUT:
-%   - timeBetweenTriggers - in seconds
+%   - timeBetweenTriggers - time to pause between triggers (doesn't include random time)
 %   - calibrationTime - system calibration time in seconds
 %   - pauseBetweenTrials - pause time in seconds
-%   - numTrials
+%   - numTrials - number of trials in training
 %   - timeBeforeJitter - time in seconds before mark jitter happens (jitter blank screen or removing the selected trigger) This is relevant only for visual
-%   - numClasses - odd ball classe (e.g., 1-> only one odd ball and baseline)
-%   - oddBallProb - in [0,1]
-%   - triggersInTrial - number of triggers in a trial
+%   - numClasses - odd ball classes (e.g., 1-> only one odd ball and baseline)
+%   - oddBallProb - probability of the oddball showing, in range [0,1)
+%   - triggersInTrial - number of triggers shown in the trial
 %   - triggerBankFolder - relative/absolute path to selected trigger bank (folder with images/audio for training)
 %   - is_visual - visual or auditory P300
 
 % OUTPUT:
-%   EEG - EEG signal of training. shape: (# trials, # EEG channels, trial sample size) 
-%   fullTrainingVec - Triggers during training. shape: (# trials, trial length)
-%   expectedClasses - class number the subject neeeds to focus on in each trial
-%   triggersTime - system time of each trigger showing and the buffer dump time in last position
-%
+%   - EEG - EEG signal of training. shape: (# trials, # EEG channels, trial sample size) 
+%   - fullTrainingVec - Triggers during training. shape: (# trials, trial length)
+%   - expectedClasses - class number the subject neeeds to focus on in each trial
+%   - triggersTime - times the triggers were activated with last value the dump time of buffer
+%   - backupTimes - times before the triggers were activated with last value the time before dumping the buffer
 
 
 %% Set up recording
