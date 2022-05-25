@@ -1,4 +1,4 @@
-function [meanAcc, valAcc, predictions, targets] = TrainGenericModel(modelName, data, labels, numOfFolds)
+function [meanAcc, valAcc, predictions, targets, finalModel] = TrainGenericModel(modelName, data, labels, numOfFolds)
 % TrainGenericModel - train and evaluate using K-Fold for LDA / SVM model
 % 
 % INPUTS:
@@ -15,8 +15,10 @@ function [meanAcc, valAcc, predictions, targets] = TrainGenericModel(modelName, 
   
     if strcmp(modelName, 'LDA')
         modelFunc = @LdaModel;
+        finalModel ={data, labels, 'diagLinear'};
     elseif strcmp(modelName, 'SVM')
         modelFunc = @SvmModel;
+        finalModel = fitcsvm(data, labels, 'KernelFunction','rbf');
     else
         error('Unknown Model type received: %s', modelName);
     end
@@ -32,6 +34,8 @@ function [meanAcc, valAcc, predictions, targets] = TrainGenericModel(modelName, 
     end
     
     meanAcc = mean(valAcc);
+    
+    finalModel = 
     
 end
 

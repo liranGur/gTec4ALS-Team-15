@@ -18,9 +18,9 @@ mkdir(recordingFolder);
 
 %% Training
 [EEG, trainingVector, trainingLabels, triggersTimes, backupTimes] = ...
-    OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, beforeJitterTime, ...
-                    numClasses, oddBallProb, triggersInTrial, ...
-                    triggerBankFolder, is_visual);
+    Recording.OfflineTraining(timeBetweenTriggers, calibrationTime, pauseBetweenTrials, numTrials, beforeJitterTime, ...
+                              numClasses, oddBallProb, triggersInTrial, ...
+                              triggerBankFolder, is_visual);
 
 save(strcat(recordingFolder, 'trainingVector.mat'), 'trainingVector');
 save(strcat(recordingFolder, 'EEG.mat'), 'EEG');
@@ -59,12 +59,30 @@ save(strcat(recordingFolder, 'processedEEG.mat'), 'processedEEG');
 
 %% Models
 [data, targets] = Models.processedDataTo2dMatrixMeanChannels(processedEEG, trainingLabels, 1);
-[meanAcc, valAcc, predictions, targets] = Models.TrainGenericModel('SVM', data, targets, 3);
+[svm_meanAcc, svm_valAcc, svm_predictions, svm_targets, svm_finalModel] = Models.TrainGenericModel('SVM', data, targets, 3);
+[lda_meanAcc, lda_valAcc, lda_predictions, lda_targets, lda_finalModel] = Models.TrainGenericModel('LDA', data, targets, 3);
 
-save(strcat(recordingFolder, 'meanAcc.mat'), 'meanAcc');
-save(strcat(recordingFolder, 'valAcc.mat'), 'valAcc');
-save(strcat(recordingFolder, 'predictions.mat'), 'predictions');
-save(strcat(recordingFolder, 'targets.mat'), 'targets');
+if svm_meanAcc > lda_meanAcc
+    [meanAcc, valAcc, predictions, targets, finalModel] = deal(svm_meanAcc, svm_valAcc, svm_predictions, svm_targets, svm_finalModel);
+    selectedModel='SVM';
+else
+    [meanAcc, valAcc, predictions, targets, finalModel] = deal(lda_meanAcc, lda_valAcc, lda_predictions, lda_targets, lda_finalModel);
+    selectedModel='LDA';
+end
+
+
+modelDir = [baseFolder '\' int2str(subId) '\' Utils.Config.modelDirName '\'];
+mkdir(modelDir)
+modelDir = [modelDir int2str(meanAcc) '_' selectedModel '_' strrep(datestr(now), ':','-') '\'];
+mkdir(modelDir)
+
+save(strcat(modelDir, 'meanAcc.mat'), 'meanAcc');
+save(strcat(modelDir, 'valAcc.mat'), 'valAcc');
+save(strcat(modelDir, 'predictions.mat'), 'predictions');
+save(strcat(modelDir, 'targets.mat'), 'targets');
+save(strcat(modelDir, 'model.mat'), 'finalModel');
+save(strcat(modelDir, 'parameters.mat'), 'parametersToSave');
+
 
 % [data, targets, numFolds] = Models.LoadConvertMultipleRecordings('recordingFolder\100\', {'03-May-2022 12-08-47', '03-May-2022 12-16-04', '03-May-2022 12-20-48'});
 % [meanAcc, valAcc, predictions, targets] = Models.TrainGenericModel('SVM', data, targets, numFolds)
