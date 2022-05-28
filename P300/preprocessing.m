@@ -1,4 +1,5 @@
-function [splitEEG, meanTrigs, processedEEG] = preprocessing(EEG, triggersTimes, trainingVector, preTriggerRecTime, triggerWindowTime)
+function [splitEEG, meanTrigs, processedEEG] = preprocessing(EEG, triggersTimes, trainingVector, ...
+                                                        preTriggerRecTime, triggerWindowTime, downSampleRate)
 % Preprocessing - all the preprocessing done on recorded data
 %
 %INPUT:
@@ -23,11 +24,11 @@ function [splitEEG, meanTrigs, processedEEG] = preprocessing(EEG, triggersTimes,
     [numTrials, ~, eegChannels, windowSize] = size(splitEEG);
     classes = unique(trainingVector);
 
-%% Downsample    
+%% Mean on same class    
     meanTrigs = averageTriggersByClass(splitEEG, numTrials, classes, eegChannels, windowSize, trainingVector);
 
 %% DownSampling
-    processedEEG = downsampleEEG(meanTrigs, numTrials, classes, eegChannels, windowSize);
+    processedEEG = downsampleEEG(meanTrigs, numTrials, classes, eegChannels, windowSize, downSampleRate);
 
 end
 
@@ -46,20 +47,20 @@ function [meanTrigs] = averageTriggersByClass(splitEEG, numTrials, classes, eegC
     end
 end
 
-function [processedEEG] = downsampleEEG(splitEEg, numTrials, classes, eegChannels, windowSize)
+function [processedEEG] = downsampleEEG(splitEEg, numTrials, classes, eegChannels, windowSize, downSampleRate)
 % downSampleEEG - downsamples EEG
 % 
 % INPUTS:
 %   splitEEG - EEG data with shape: #trials, #triggers(can be mean triggers or anything else), #channels, sample size
 
-    downSampledWindowSize = ceil(windowSize*(Utils.Config.downSampleRate/Utils.Config.Hz));
+    downSampledWindowSize = ceil(windowSize*(downSampleRate/Utils.Config.Hz));
     processedEEG = zeros(numTrials, length(classes), eegChannels, downSampledWindowSize);
   
     for i =1:size(splitEEg, 1)
         for j=1:size(splitEEg, 2)
             squeezedEEG = squeeze(splitEEg(i,j,:,:));
             if Utils.Config.Hz > Utils.Config.downSampleRate
-                EEG_pass_trans = resample(squeezedEEG.', Utils.Config.downSampleRate, ...
+                EEG_pass_trans = resample(squeezedEEG.', downSampleRate, ...
                     Utils.Config.Hz);
                 squeezedEEG = EEG_pass_trans.';
             end

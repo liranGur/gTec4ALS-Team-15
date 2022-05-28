@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import mean
 
 from config import const
 from utils import load_mat_data, load_parameters
@@ -53,5 +54,41 @@ def vis_raw_data(save_folder: str):
         break
 
 
+def plot_raw_data_with_triggers_lines(save_folder: str, trial_to_plot: int=1, hz=512):
+    def get_target_trigger_sample_idx(times, expected_class, eeg_sample_size, training_labels, hz=hz):
+        end_time = times[-1]
+        total_recording_time = eeg_sample_size / hz
+        start_time = end_time - total_recording_time
+        results = list()
+        target_time = times[:-1][training_labels == expected_class]
+        for curr in target_time:
+            time_diff = curr - start_time
+            sample_idx = int(time_diff*hz)
+            results.append(sample_idx)
+
+        return results
+
+
+    eeg_data = load_mat_data(const.eeg_name, save_folder)
+    sequences = load_mat_data(const.training_sequences, save_folder)
+    labels = load_mat_data(const.training_labels, save_folder).flatten()
+    triggers_time = load_mat_data(const.triggers_time, save_folder)
+    eeg_mean = mean(eeg_data[trial_to_plot], axis=0)
+    targets_sample_idx = get_target_trigger_sample_idx(triggers_time[trial_to_plot], labels[trial_to_plot],
+                                                       eeg_data.shape[-1], sequences[trial_to_plot])
+    plot_nums = 4
+    fig = make_subplots(rows=plot_nums, cols=1)
+    window_size_factor = 1
+    for idx in range(plot_nums):
+        sample_idx = targets_sample_idx[idx]
+        start_idx = sample_idx - 50
+        end_idx = int(sample_idx + hz*window_size_factor)
+        fig.add_trace(go.Scatter(y=eeg_mean[start_idx:end_idx], x=np.arange(start_idx, end_idx)), row=idx+1, col=1)
+        fig.add_vline(sample_idx, row=idx+1, col=1)
+        fig.add_vline(sample_idx+)
+
+    fig.show()
+
+
 if __name__ == '__main__':
-    vis_raw_data('C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\p300Recordings\\100\\26-Apr-2022 12-30-27')
+    plot_raw_data_with_triggers_lines('C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\100\\24-5_bandpass\\')
