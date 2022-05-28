@@ -84,11 +84,29 @@ def plot_raw_data_with_triggers_lines(save_folder: str, trial_to_plot: int=1, hz
         start_idx = sample_idx - 50
         end_idx = int(sample_idx + hz*window_size_factor)
         fig.add_trace(go.Scatter(y=eeg_mean[start_idx:end_idx], x=np.arange(start_idx, end_idx)), row=idx+1, col=1)
-        fig.add_vline(sample_idx, row=idx+1, col=1)
-        fig.add_vline(sample_idx+)
+        fig.add_vline(sample_idx, row=idx+1, col=1)     # trigger Line
+        fig.add_vline(sample_idx+153, line_dash='dash', line_color='green', row=idx + 1, col=1)  # P300 location
 
+    fig.update_layout({'title': 'Raw EEG with mean on channels for targets'})
     fig.show()
 
 
+def visualize_split_and_mean(save_folder: str, trial_to_plot: int = 1, hz=512):
+    mean_eeg = load_mat_data(('meanTriggers', 'meanTriggers'), save_folder)
+    # mean_eeg = mean_eeg[trial_to_plot]
+    labels = load_mat_data(const.training_labels, save_folder).flatten()
+    fig = make_subplots(rows=4, cols=3)
+    for trail in range(trial_to_plot, trial_to_plot+3):
+        for cls in range(4):
+            to_plot = mean(mean_eeg[trail, cls], axis=0)
+            fig.add_trace(go.Scatter(y=to_plot, x=np.arange(len(to_plot)), name=f't:{trail}_c:{cls}'),
+                          row=cls+1, col=trail+1-trial_to_plot)
+            fig.add_vline(153, line_dash='dash', line_color='green', row=cls+1, col=trail+1-trial_to_plot)  # P300 location
+
+    fig.show()
+    print(labels[trial_to_plot:trial_to_plot+3])
+
+
 if __name__ == '__main__':
-    plot_raw_data_with_triggers_lines('C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\100\\24-5_bandpass\\')
+    # plot_raw_data_with_triggers_lines('C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\100\\24-5_bandpass\\')
+    visualize_split_and_mean('C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\100\\24-5_bandpass\\', 7)
