@@ -12,11 +12,14 @@ load('recordingFolder\100\24-5_bandpass\triggersTimes.mat')
 
 
 preTriggerRecTime = -0.2;
-triggerWindowTime = 0.8;
-downSampleRate = 20;
+triggerWindowTime = 0.6;
+downSampleRate = 60;
 [splitEEG, meanTriggers, subtractedMean, processedEEG] = preprocessing(EEG, triggersTimes, trainingVector, ...
                                          preTriggerRecTime, triggerWindowTime, downSampleRate);
-[trainData, targets] = Models.processedDataTo2dMatrixMeanChannels(processedEEG, trainingLabels, 1);
+save('recordingFolder\100\24-5_bandpass\processedSubtractedEEG.mat', 'processedEEG')
+size(processedEEG)
+[trainData, targets] = Models.processedDataTo2dMatrixMeanChannels(processedEEG(:,:,[7 16],:), trainingLabels, 1);
+[svm_meanAcc, svm_valAcc, svm_predictions, svm_targets, svm_finalModel] = Models.TrainGenericModel('SVM', trainData, targets, 6);
 % save('recordingFolder\100\24-5_bandpass\data_test.mat', 'trainData')
 % save('recordingFolder\100\24-5_bandpass\data_target.mat', 'targets')
 

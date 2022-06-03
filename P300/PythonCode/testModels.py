@@ -101,7 +101,8 @@ def search_preprocess_params(folder_path):
 
 
 def svm_channel_search(folder_path):
-    processed_eeg = load_mat_data(('processedEEG', 'processedEEG'), folder_path)
+    processed_eeg = load_mat_data(('processedSubtractedEEG', 'processedEEG'), folder_path)
+    # processed_eeg = load_mat_data(('processedEEg', 'processedEEG'), folder_path)
     expected_classes = load_mat_data(('trainingLabels', 'trainingLabels'), folder_path)
     channels_to_use = [0, 1, 2, 4, 5, 6, 9, 11, 15]
     channels_comb = [list(itertools.combinations(channels_to_use, i)) for i in range(1, len(channels_to_use))]

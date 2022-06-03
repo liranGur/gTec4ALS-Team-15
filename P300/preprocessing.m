@@ -24,14 +24,14 @@ function [splitEEG, meanTrigs, subtractedMean, processedEEG] = preprocessing(EEG
     [splitEEG, ~] = splitTrials(bandpassedEEG, triggersTimes, preTriggerTimeForMean, triggerWindowTime);
     [numTrials, ~, eegChannels, windowSize] = size(splitEEG);
     classes = unique(trainingVector);
-    numClasses = size(classes,1);
  
 %% Mean on same class    
     meanTrigs = averageTriggersByClass(splitEEG, numTrials, classes, eegChannels, windowSize, trainingVector);
 
 %% Subtract mean start and trim to finalSize
     [subtractedMean, finalWindowSize] = subtractMeanStartFromEEG(meanTrigs, preTriggerTimeForMean, preTriggerRecTime);
-
+%     subtractedMean = meanTrigs;
+%     finalWindowSize = windowSize;
 
 %% DownSampling
     processedEEG = downsampleEEG(subtractedMean, numTrials, classes, eegChannels, finalWindowSize, downSampleRate);
@@ -76,6 +76,24 @@ function [processedEEG] = downsampleEEG(splitEEg, numTrials, classes, eegChannel
 end
 
 function [subtractedMean, finalWindowSize] = subtractMeanStartFromEEG(meanTrigs, preTriggerTimeForMean, preTriggerRecTime)
+% subtractMeanStartFromEEG - subtracte from each trigger the mean value of 
+%   preTriggerTimeForMean seconds before the trigger appeared and cut the
+%   window size to be the size defined by preTriggerRecTime
+% 
+% INPUTS:
+%   - meanTrigs - EEG after splitting to trials and mean by class, 
+%           shape: #trails, #classes, #eeg channels, #some window size
+%   - preTriggerTimeForMean - time in seconds to be used before the trigger to 
+%           calculate the mean that will be subtracted from trigger
+%   - preTriggerRecTime - final time in seconds after/before the trigger to
+%           be inclusded in the processed EEG
+% 
+% OUTPUTS:
+%   - subtractedMean - the value of the mean triggers given in input after subtracting 
+%           the mean and keeping only the requested window size.
+%           shape: #trails, #classes, #channles, finalWindowSize
+%   - finalWindowSize - the windows size as given by preTriggerRecTime
+% 
     [numTrials, numClasses, eegChannels, meanSampleSize] = size(meanTrigs);
     sampleSizeDiff = floor((preTriggerTimeForMean - preTriggerRecTime)*Utils.Config.Hz);
     finalWindowSize = meanSampleSize - sampleSizeDiff;
