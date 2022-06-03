@@ -1,12 +1,12 @@
 close all; clear; clc;
 %% setting single record
-recordingFolder = uigetdir('C:/Subjects/', ...
-    'Choose Desired Directory');
-
+% recordingFolder = uigetdir('C:/Subjects/', ...
+%     'Choose Desired Directory');
+recordingFolder = 'C:\Ariel\Files\BCI4ALS\gTec4ALS-Team-15\P300\recordingFolder\100\24-5_bandpass';
 load(strcat(recordingFolder,'\EEG.mat'), 'EEG')
-load(strcat(recordingFolder,'\trainingSequences.mat'), 'trainingVec')
+load(strcat(recordingFolder,'\trainingVector.mat'), 'trainingVector')
 load(strcat(recordingFolder,'\trainingLabels.mat'), 'expectedClasses')
-load(strcat(recordingFolder,'\triggersTime.mat'), 'triggersTimes')
+load(strcat(recordingFolder,'\triggersTimes.mat'), 'triggersTimes')
 
 %% Setting parameters
 Hz = Utils.Config.Hz;
@@ -24,7 +24,7 @@ fltrEEG = zeros(size(EEG));
 for currTrial = 1:size(EEG,1)
     for currElec = 1:size(EEG,2)
         sqzEEG = squeeze(EEG(currTrial,currElec,:));   % squeeze specific trial and electrode
-        bndpsEEG = bandpass(sqzEEG,fpass,Hz);   % bandpass data of specific trial and electrode
+        bndpsEEG = sqzEEG;%bandpass(sqzEEG,fpass,Hz);   % bandpass data of specific trial and electrode
         fltrEEG(currTrial,currElec,:) = bndpsEEG;   % add filtered vectors to array
     end
 end
@@ -32,7 +32,7 @@ end
 % Visualization - 10 figures (1 for each trial)
 for currTrial = 1:size(fltrEEG,1)
     figure('units' , 'centimeters' , 'position' , fig_sz)
-    sgtitle(['Trial ',num2str(currTrial)], 'FontSize', Font.title)
+%     sgtitle(['Trial ',num2str(currTrial)], 'FontSize', Font.title)
     visEEG = squeeze(fltrEEG(currTrial,:,:));
     for iPlot = 1:16
         subplot(4,4,iPlot)

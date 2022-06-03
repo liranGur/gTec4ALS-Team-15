@@ -1,3 +1,4 @@
+import itertools
 import os
 from functools import partial
 from typing import Tuple
@@ -99,16 +100,33 @@ def search_preprocess_params(folder_path):
     return best_acc, best_model_params, best_preprocess_params
 
 
-def svm_hp_search(folder_path, processed_eeg, expected_classes):
+def svm_channel_search(folder_path):
+    processed_eeg = load_mat_data(('processedEEG', 'processedEEG'), folder_path)
+    expected_classes = load_mat_data(('trainingLabels', 'trainingLabels'), folder_path)
+    channels_to_use = [0, 1, 2, 4, 5, 6, 9, 11, 15]
+    channels_comb = [list(itertools.combinations(channels_to_use, i)) for i in range(1, len(channels_to_use))]
+    channels_comb = set([y for x in channels_comb for y in x])
+    func = partial(svm_hp_search, expected_classes=expected_classes)
+    all_train_data = [processed_eeg[:, :, curr_comb, :] for curr_comb in channels_comb]
+    results = p_tqdm.p_map(func, all_train_data, channels_comb)
+    sorted_results = sorted(results, key=lambda res: res[0], reverse=True)
+    print('*'*30)
+    print('*' * 30)
+    print('Best results:')
+    print(sorted_results[:5])
+    print('*' * 30)
+    print('*' * 30)
+
+def svm_hp_search(processed_eeg, channels, expected_classes):
     data, targets = processed_eeg_to_train_data(processed_eeg, expected_classes)
     # data, targets = load_data(folder_path)
-    targets = targets.ravel()
+    # targets = expected_classes.ravel()
     params_ops = [{'kernel': ['rbf', 'sigmoid'],
-                   'C': [0.5, 0.75, 1, 1.25, 1.5, 1.7, 1.75, 1.8],
+                   'C': [0.5, 0.75, 1, 1.25, 1.5],
                    'shrinking': [True, False]
                    },
                   {'kernel': ['poly'],
-                   'C': [0.5, 0.75, 1, 1.25],        # , 0.75, 1, 1.1],
+                   'C': [0.75, 1, 1.25],        # , 0.75, 1, 1.1],
                    'degree': [2, 3, 4],
                    'shrinking': [True, False]
                    },
@@ -123,11 +141,13 @@ def svm_hp_search(folder_path, processed_eeg, expected_classes):
             best_acc = curr_score
             best_params = gs.best_params_
 
-    return best_acc, best_params
+    print(f'channles: {channels}, acc: {best_acc}, params: {params}')
+    return best_acc, best_params, channels
 
 
 if __name__ == '__main__':
     path_ = 'C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\100\\24-5_bandpass\\'
     # mean_acc_model(SVC(), path_, 3)
     # hp_search(path_)
-    print(search_preprocess_params(path_))
+    # print(search_preprocess_params(path_))
+    svm_channel_search(path_)

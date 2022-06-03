@@ -1,10 +1,10 @@
 import numpy as np
-from numpy import mean
 
 from config import const
 from utils import load_mat_data, load_parameters
 from plotly import graph_objs as go
 from plotly.subplots import make_subplots
+import plotly_express as px
 
 
 HZ = 512
@@ -107,6 +107,62 @@ def visualize_split_and_mean(save_folder: str, trial_to_plot: int = 1, hz=512):
     print(labels[trial_to_plot:trial_to_plot+3])
 
 
+def power_spectrum(save_folder, plot_for_each_channel=False):
+    from matplotlib import pyplot as plt
+    from numpy.fft import fft
+
+    dt = 1/512
+    eeg = load_mat_data(const.eeg_name, save_folder)
+    for trial in range(eeg.shape[0]):
+        all_channels_data = list()
+        for chan in range(eeg.shape[1]):
+            x = eeg[trial, chan]
+            N = x.shape[0]
+            T = N * dt
+            xf = fft(x - x.mean())  # Compute Fourier transform of x
+            Sxx = 2 * dt ** 2 / T * (xf * xf.conj())  # Compute spectrum
+            Sxx = Sxx[:int(len(x) / 2)]  # Ignore negative frequencies
+
+            df = 1 / T  # Determine frequency resolution
+            fNQ = 1 / dt / 2  # Determine Nyquist frequency
+            faxis = np.arange(0, fNQ, df)  # Construct frequency axis
+
+            if not plot_for_each_channel:
+                all_channels_data.append((faxis, Sxx.real))
+            else:
+                fig = px.line(x=faxis, y=Sxx.real)
+                fig.update_layout({'title': f'Power Spectrum trial: {trial} and channel: {chan}'})
+                fig.update_xaxes({'title': 'Frequency [Hz]'})
+                fig.update_yaxes({'title': 'Power [$\mu V^2$/Hz]'})
+                fig.show()
+                # plt.plot(faxis, Sxx.real)  # Plot spectrum vs frequency
+                # plt.xlim([0, 100])  # Select frequency range
+                # plt.xlabel('Frequency [Hz]')  # Label the axes
+                # plt.ylabel('Power [$\mu V^2$/Hz]')
+                # plt.title(f'Power Spectrum trial: {trial} and channel: {chan}')
+                # plt.show()
+
+        if not plot_for_each_channel:
+            fig = go.Figure()
+            for x, y in all_channels_data:
+                # plt.plot(x, y)  # Plot spectrum vs frequency
+                fig.add_trace(go.Scatter(x=x, y=y))
+            fig.update_layout({'title': f'Power Spectrum trial: {trial}'})
+            fig.update_xaxes({'title': 'Frequency [Hz]'})
+            fig.update_yaxes({'title': 'Power [$\mu V^2$/Hz]'})
+            fig.show()
+
+            # plt.xlim([0, 100])  # Select frequency range
+            # plt.xlabel('Frequency [Hz]')  # Label the axes
+            # plt.ylabel('Power [$\mu V^2$/Hz]')
+            # plt.title(f'Power Spectrum trial: {trial}')
+            # plt.show()
+        break   # only for single trial
+
+
+
 if __name__ == '__main__':
     # plot_raw_data_with_triggers_lines('C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\100\\24-5_bandpass\\')
-    visualize_split_and_mean('C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\100\\24-5_bandpass\\', 7)
+    rec_bp_folder_ = 'C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\100\\24-5_bandpass\\'
+    # visualize_split_and_mean('C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\100\\24-5_bandpass\\', 7)
+    power_spectrum(rec_bp_folder_)

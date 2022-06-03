@@ -11,10 +11,10 @@ load('recordingFolder\100\24-5_bandpass\trainingLabels.mat')
 load('recordingFolder\100\24-5_bandpass\triggersTimes.mat')
 
 
-preTriggerRecTime = -0.1;
-triggerWindowTime = 0.5;
+preTriggerRecTime = -0.2;
+triggerWindowTime = 0.8;
 downSampleRate = 20;
-[splitEEG, meanTriggers, processedEEG] = preprocessing(EEG, triggersTimes, trainingVector, ...
+[splitEEG, meanTriggers, subtractedMean, processedEEG] = preprocessing(EEG, triggersTimes, trainingVector, ...
                                          preTriggerRecTime, triggerWindowTime, downSampleRate);
 [trainData, targets] = Models.processedDataTo2dMatrixMeanChannels(processedEEG, trainingLabels, 1);
 % save('recordingFolder\100\24-5_bandpass\data_test.mat', 'trainData')
@@ -29,6 +29,19 @@ figure('Name', strcat('raw eeg for trial ', int2str(trailToPlot), ' mean on chan
 plot(squeeze(mean(squeeze(EEG(trailToPlot,:,:)),1)))
 
 %% MeanTriggers
+
+
+figure()
+trial=10;
+for i=1:100
+    hold on
+    if trainingVector(trial,i) == 2
+        plot(squeeze(splitEEG(1,i,9,:)), 'b')
+    end
+    if trainingVector(trial,i) == 3
+        plot(squeeze(splitEEG(1,i,9,:)), 'r')
+    end
+end
 
 %plot meanEEG for targets - mean on channels
 figure('Name', 'EEG - Mean Triggers (no preprocess) - only on targets of train - mean on channels')
@@ -58,6 +71,32 @@ for trial=diffTrial:diffTrial+2
 end
 
 
+% subtract baseline
+subtractedMean = zeros(4,16,308);
+trialIdx=3;
+for cls=1:4
+    for channel=1:16
+        toSubtract = mean(meanTriggers(trialIdx,cls,channel,1:100));
+        subtractedMean(cls,channel,:) = meanTriggers(trialIdx,cls,channel,:) - toSubtract;
+    end
+end
+
+figure()
+for cls=1:4
+    for chan=1:16
+        subplot(4,16,(cls-1)*4+chan)
+        plot(squeeze(subtractedMean(cls,channel,:)))
+    end
+end
+
+figure()
+for chan=1:16
+    for cls=[1 3]
+        subplot(4,4,chan)
+        hold on
+        plot(squeeze(subtractedMean(cls,chan,:)))
+    end
+end
 
 %% Split EEG
 
@@ -76,6 +115,19 @@ for i=firstTrigger:firstTrigger+15
         title(strcat('non-target - ', int2str(i)))
     end
     
+end
+
+%% subtracted Mean
+
+% plot all channles 3 figures one for each class
+trialIdx = 9;
+for cls=2:4
+    figure('Name', strcat('subtracted mean class: ', int2str(cls)))
+    for chan = 1:16
+        subplot(4,4,chan)
+        plot(squeeze(subtractedMean(trialIdx,cls, chan, :)))
+        title(int2str(chan))
+    end
 end
 
 %% Processed EEG

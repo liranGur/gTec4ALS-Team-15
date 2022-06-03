@@ -57,12 +57,13 @@ save(strcat(recordingFolder, 'parameters.mat'), 'parametersToSave');
 
 %% PreProcessing
 
-[splitEEG, meanTriggers, processedEEG] = preprocessing(EEG, triggersTimes, trainingVector, ...
+[splitEEG, meanTriggers, subtractedMean, processedEEG] = preprocessing(EEG, triggersTimes, trainingVector, ...
                                          Utils.Config.preTriggerRecTime, Utils.Config.triggerWindowTime, ...
                                          Utils.Config.downSampleRate);
 
 save(strcat(recordingFolder, 'splitEEG.mat'), 'splitEEG');
 save(strcat(recordingFolder, 'meanTriggers.mat'), 'meanTriggers');
+save(strcat(recordingFolder, 'subtractedMean.mat'), 'subtractedMean');
 save(strcat(recordingFolder, 'processedEEG.mat'), 'processedEEG');
 
 %% Models
