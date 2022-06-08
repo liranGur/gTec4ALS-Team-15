@@ -2,10 +2,9 @@ import itertools
 import json
 import logging
 import os
-import random
 import sys
 from functools import partial
-from typing import List, Dict, Union, Tuple, Callable, Set, Any, Optional
+from typing import List, Dict, Union, Callable, Set, Any, Optional
 import numpy as np
 import shutil
 from p_tqdm import p_map
@@ -14,23 +13,10 @@ from sklearn.svm import SVC
 import joblib
 from datetime import datetime
 
-from utils import load_mat_data
-from config import Const
-
-
-random.seed(42)
-np.random.seed(42)
-
-
-def log_data(*args):
-    for arg in args:
-        print(arg)
-        if isinstance(arg, str):
-            logging.debug(arg)
-        else:
-            if isinstance(arg, set):
-                arg = list(arg)
-            logging.debug(json.dumps(arg))
+import ModelSearchDataUtils
+from ModelSearchDataUtils import final_eeg_to_train_data, get_manipulation_func, mean_channels, concat_channels
+from utils import load_mat_data, log_data, start_log
+from config import Const, const
 
 
 def load_data(folder_path):
@@ -38,36 +24,6 @@ def load_data(folder_path):
     processed_eeg = load_mat_data(Const.processed_eeg, folder_path)
     training_labels = load_mat_data(Const.training_labels, folder_path)
     return processed_eeg, training_labels
-
-
-def final_eeg_to_train_data(eeg_data: np.ndarray, labels: Union[List, np.ndarray],
-                            remove_idle_cls: bool = True) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Converts the final eeg data (after manipulation on channels to final model train data)
-    :param eeg_data: eeg data after all pre processing, shape: #trials, #classes, sample
-    :param labels: list with target values. size: #trials
-    :param remove_idle_cls: True if there is an idle class
-    :return: Tuple of:
-        * train data - shape:#trial*#non_idle_classes, sample
-        * training labels - vector of 0 or 1 for binary classification, shape: #trial*#non_idle_classes, sample
-    """
-    log_data(f'skipping idle class: {remove_idle_cls}')
-    labels = np.array(labels).ravel() - 1       # Convert to python indexing
-    num_trials = eeg_data.shape[0]
-    if remove_idle_cls:
-        # remove idle class from data
-        eeg_data = eeg_data[:, 1:, :]
-        # This is done because the target values with idle class are from 2 to number of classes and here the indices
-        # are 0 to num of classes, so we need to fix by 2 (1 for matlab index and 1 for skipping idle class)
-        labels = labels - 1
-    num_classes = eeg_data.shape[1]
-    x_train = np.reshape(eeg_data, (num_trials * num_classes, eeg_data.shape[2]))
-    y_train = np.zeros(x_train.shape[0])
-    for trial_idx, curr_trial_label in enumerate(labels):
-        for cls in range(num_classes):
-            y_train[trial_idx*num_classes + cls] = int(curr_trial_label == cls)
-
-    return x_train, y_train
 
 
 def select_best_model(results: List[Dict]) -> Dict:
@@ -167,18 +123,13 @@ def mean_channel_search(channels_comb: Set, processed_eeg: np.ndarray,
     :param channels_comb: set of combinations of all channels
     :param processed_eeg: the processed eeg with shape: #trial, #classes, #channels, sample
     :param training_labels: list of training labels with len: #trials
-    :return: A dictionary of the results of the best selected model, with keys: accuracy, parameters, channels and
-            manipulation_func - the channel manipulation function that receives a list of eeg data (after channel
-            selection) and returns a list of eeg data after channel manipulation
+    :return: A dictionary of the results of the best selected model, with keys: accuracy, parameters, channels
     """
-    def data_manipulation(filtered_data_):
-        all_train_data = [np.mean(curr_data, axis=2) for curr_data in filtered_data_]
-        return all_train_data
     log_data('mean search on channels:', channels_comb)
     filtered_data = [processed_eeg[:, :, curr_chans, :] for curr_chans in channels_comb]
     search_func = partial(svm_hp_search, train_labels=training_labels)
-    search_res = channel_search_general(list(channels_comb), data_manipulation, filtered_data, search_func)
-    search_res['manipulation_func'] = data_manipulation
+    search_res = channel_search_general(list(channels_comb), mean_channels,
+                                        filtered_data, search_func)
     return search_res
 
 
@@ -190,18 +141,12 @@ def concat_channel_search(channels_comb: Set, processed_eeg: np.ndarray,
     :param processed_eeg: the processed eeg with shape: #trial, #classes, #channels, sample
     :param training_labels: list of training labels with len: #trials
     :return: A dictionary of the results of the best selected model, with keys: accuracy, parameters, channels and
-            manipulation_func - the channel manipulation function that receives a list of eeg data (after channel
-            selection) and returns a list of eeg data after channel manipulation
     """
-    def data_manipulation(filtered_data_):
-        channels_first_data = [np.moveaxis(curr_eeg, 2, 0) for curr_eeg in filtered_data_]
-        all_train_data = [np.concatenate(curr_data, axis=-1) for curr_data in channels_first_data]
-        return all_train_data
     log_data('concat channels search on channels:', channels_comb)
     filtered_data = [processed_eeg[:, :, curr_chans, :] for curr_chans in channels_comb]
     search_func = partial(svm_hp_search, train_labels=training_labels)
-    search_res = channel_search_general(list(channels_comb), data_manipulation, filtered_data, search_func)
-    search_res['manipulation_func'] = data_manipulation
+    search_res = channel_search_general(list(channels_comb), concat_channels,
+                                        filtered_data, search_func)
     return search_res
 
 
@@ -210,8 +155,7 @@ def channels_search(processed_eeg: np.ndarray, training_labels: Union[List, np.n
     The main function for doing hyper parameter search and channel search
     :param processed_eeg: the processed eeg with shape: #trials, #classes, #eeg channels, sample
     :param training_labels: list of training labels with len: #trials
-    :return: A dictionary of the results of the best selected model, with keys: accuracy, parameters, channels and
-            manipulation_func
+    :return: A dictionary of the results of the best selected model, with keys: accuracy, parameters, channels
     """
     # create channels combination search
     channels_to_use = [11, 2, 7]  # [0, 1, 2, 4, 5, 6, 9, 11, 15]
@@ -233,13 +177,12 @@ def final_model_train(processed_eeg: np.ndarray, training_labels: Union[List, np
     A function that creates a final SVM model based on the best parameters received
     :param processed_eeg: the processed eeg with shape: #trials, #classes, #eeg channels, sample
     :param training_labels: list of training labels with len: #trials
-    :param results: the search results dictionary with keys: accuracy, parameters, channels, manipulation_func
+    :param results: the search results dictionary with keys: accuracy, parameters, channels
     :return: a final SVM model
     """
-    if results['manipulation_func'] is not None:
-        manipulated_data = results['manipulation_func']([processed_eeg[:, :, results['channels'], :]])
-    else:
-        manipulated_data = processed_eeg
+
+    channel_manipulation_func = get_manipulation_func(results['mode'])
+    manipulated_data = channel_manipulation_func([processed_eeg[:, :, results['channels'], :]])
     x_train, y_train = final_eeg_to_train_data(np.array(manipulated_data[0]), training_labels)
     model = SVC(**results['parameters'])
     model.fit(x_train, y_train)
@@ -259,7 +202,7 @@ def save_data_for_matlab(models_folder, recording_folder_path, model, result):
     save_dir = os.path.join(models_folder, model_folder_name)
     os.makedirs(save_dir, exist_ok=True)
     joblib.dump(model, os.path.join(save_dir, f'model_{result["name"]}_{result["accuracy"]:.2f}.sav'))
-    with open(os.path.join(save_dir, 'search_results.json'), "w") as file:
+    with open(os.path.join(save_dir, const.search_result_file), "w") as file:
         json.dump(result, file)
     shutil.copy(os.path.join(recording_folder_path, 'parameters.mat'), os.path.join(save_dir, 'parameters.mat'))
     return save_dir
@@ -282,9 +225,7 @@ def main_search(recording_folder_path: str, models_folder: Optional[str] = None,
         log_data('Skipping channels search')
         final_result = None
 
-    for_log = final_result.copy()
-    for_log['manipulation_func'] = 0
-    log_data('Final Results:', for_log)
+    log_data('Final Results:', final_result)
     final_model = final_model_train(processed_eeg, training_labels, final_result)
     if models_folder is not None:
         save_dir = save_data_for_matlab(models_folder, recording_folder_path, final_model, final_result)
@@ -300,5 +241,5 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print('Not enough input parameters')
         exit(-1)
-    logging.basicConfig(filename=os.path.join(sys.argv[1], 'py_debug.txt'), level=logging.DEBUG)
+    start_log(True)
     main_search(*sys.argv[1:])

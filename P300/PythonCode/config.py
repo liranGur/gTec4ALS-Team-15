@@ -15,6 +15,7 @@ class Const:
     hz: str = 'Hz'
     num_trials: str = 'numTrials'
     triggers_in_trial: str = 'triggersInTrial'
+    search_result_file: str = 'search_results.json'
 
 
 

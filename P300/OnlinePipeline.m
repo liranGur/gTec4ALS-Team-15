@@ -72,14 +72,14 @@ close all; clear; clc;
 %     testData = Models.processedDataTo2dMatrixMeanChannels(processedEEG, trainingVector, 1);
 %     predictions = modelPredictFunc(testData);
 
-    if sum(predictions) ~= 1
-        set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
-        Recording.DisplayTextOnFig('The model was unable to select an answer please try again');
-    else
-        predictionClass  = find(predictions == 1);
-        set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
-        Recording.DisplayTextOnFig(['The selected response was ' classesNames(predictionClass)]);
-    end
+%     if sum(predictions) ~= 1
+%         set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
+%         Recording.DisplayTextOnFig('The model was unable to select an answer please try again');
+%     else
+%         predictionClass  = find(predictions == 1);
+%         set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
+%         Recording.DisplayTextOnFig(['The selected response was ' classesNames(predictionClass)]);
+%     end
     
     GUIFiles.SuspendRun();
                                                    
