@@ -48,8 +48,6 @@ parametersToSave = struct('timeBetweenTriggers', timeBetweenTriggers, ...
                           'is_visual', is_visual, ...
                           'preTrialPause', Utils.Config.preTrialPause, ...
                           'maxRandomTimeBetweenTriggers', Utils.Config.maxRandomTimeBetweenTriggers, ...
-                          'preTriggerRecTime', Utils.Config.preTriggerRecTime, ...
-                          'triggerWindowTime', Utils.Config.triggerWindowTime, ...
                           'downSampleRate', Utils.Config.downSampleRate);
                            
 save(strcat(recordingFolder, 'parameters.mat'), 'parametersToSave');
@@ -67,35 +65,10 @@ save(strcat(recordingFolder, 'subtractedMean.mat'), 'subtractedMean');
 save(strcat(recordingFolder, 'processedEEG.mat'), 'processedEEG');
 
 %% Models
-[trainData, targets] = Models.processedDataTo2dMatrixMeanChannels(processedEEG, trainingLabels, 1);
-[svm_meanAcc, svm_valAcc, svm_predictions, svm_targets, svm_finalModel] = Models.TrainGenericModel('SVM', trainData, targets, 3);
-[lda_meanAcc, lda_valAcc, lda_predictions, lda_targets, lda_finalModel] = Models.TrainGenericModel('LDA', trainData, targets, 3);
-
-if svm_meanAcc > lda_meanAcc
-    [meanAcc, valAcc, predictions, foldedTrainTargets, finalModel] = deal(svm_meanAcc, svm_valAcc, svm_predictions, svm_targets, svm_finalModel);
-    selectedModel='SVM';
-else
-    [meanAcc, valAcc, predictions, foldedTrainTargets, finalModel] = deal(lda_meanAcc, lda_valAcc, lda_predictions, lda_targets, lda_finalModel);
-    selectedModel='LDA';
-end
-
 
 modelDir = [baseFolder '\' int2str(subId) '\' Utils.Config.modelDirName '\'];
-mkdir(modelDir)
-modelDir = [modelDir int2str(meanAcc) '_' selectedModel '_' strrep(datestr(now), ':','-') '\'];
-mkdir(modelDir)
-
-save(strcat(modelDir, 'trainData.mat'), 'trainData');
-save(strcat(modelDir, 'meanAcc.mat'), 'meanAcc');
-save(strcat(modelDir, 'valAcc.mat'), 'valAcc');
-save(strcat(modelDir, 'predictions.mat'), 'predictions');
-save(strcat(modelDir, 'foldedTrainTargets.mat'), 'foldedTrainTargets');
-save(strcat(modelDir, 'model.mat'), 'finalModel');
-save(strcat(modelDir, 'parameters.mat'), 'parametersToSave');
-
-
-% [data, targets, numFolds] = Models.LoadConvertMultipleRecordings('recordingFolder\100\', {'03-May-2022 12-08-47', '03-May-2022 12-16-04', '03-May-2022 12-20-48'});
-% [meanAcc, valAcc, predictions, targets] = Models.TrainGenericModel('SVM', data, targets, numFolds)
+pythonCommand = ['python PythonCode\ModelSearch.py ' recordingFolder ' ' modelDir];
+[pyStatus, pyOutput] = system(pythonCommand, '-echo');
 
 %% Close all
 

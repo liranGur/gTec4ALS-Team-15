@@ -1,6 +1,7 @@
 import itertools
 import os
 from functools import partial
+import random
 from typing import Tuple
 from sklearn.svm import SVC
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
@@ -11,6 +12,10 @@ from p_tqdm import p_tqdm
 
 from utils import load_mat_data
 from preprocessing import preprocess
+
+
+random.seed(42)
+np.random.seed(42)
 
 
 def kfold_model(model, data, targets, splits):
@@ -101,7 +106,7 @@ def search_preprocess_params(folder_path):
 
 
 def svm_channel_search(folder_path):
-    processed_eeg = load_mat_data(('processedSubtractedEEG', 'processedEEG'), folder_path)
+    processed_eeg = load_mat_data(('processedEEG', 'processedEEG'), folder_path)
     # processed_eeg = load_mat_data(('processedEEg', 'processedEEG'), folder_path)
     expected_classes = load_mat_data(('trainingLabels', 'trainingLabels'), folder_path)
     channels_to_use = [0, 1, 2, 4, 5, 6, 9, 11, 15]
@@ -117,6 +122,7 @@ def svm_channel_search(folder_path):
     print(sorted_results[:5])
     print('*' * 30)
     print('*' * 30)
+
 
 def svm_hp_search(processed_eeg, channels, expected_classes):
     data, targets = processed_eeg_to_train_data(processed_eeg, expected_classes)

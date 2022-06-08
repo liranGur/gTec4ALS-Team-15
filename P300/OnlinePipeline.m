@@ -8,25 +8,26 @@ close all; clear; clc;
 %% Load model & record parameters
 
     %%% Here we allow selecting only a user directory or a specific model directory
-    modelFolder = uigetdir('G:\.shortcut-targets-by-id\1EX7NmYYOTBYtpFCqH7TOhhm4mY31oi1O\P300-Recordings', ...
-        'Choose Desired Directory for Saving Recordings');
+    modelFolder = GUIFiles.OnlineModelSelection('G:\.shortcut-targets-by-id\1EX7NmYYOTBYtpFCqH7TOhhm4mY31oi1O\P300-Recordings');
 
     % if the path of the folder won't contain allModels we assume that only a
     % subject folder was selecte thus we need to select a specific model fodler
-    if ~strfind(modelFolder, Utils.Config.modelDirName)
+    splitPath = strsplit(modelFolder, '\');
+    finalFolder = splitPath{length(splitPath)};
+    if strcmp(finalFolder, Utils.Config.modelDirName)
         modelFolder = selectModelByAcc(modelFolder);
     end
 
-    loadedModel = load(strcat(modelFolder, 'model.mat'));
-    if stfind(modelFolder,'SVM')
-        svmModel = loadedModel.finalModel;
-        modelPredictFunc = @(testData) svmModel.predict(testData);
-    elseif stfind(modelFolder,'LDA')
-        modelPredictFunc = GetLDAPredictionFunc(loadedModel.finalModel);
-        error('to do')
-    else
-        error('Online training unknwon model type')
-    end
+%     loadedModel = load(strcat(modelFolder, 'model.mat'));
+%     if stfind(modelFolder,'SVM')
+%         svmModel = loadedModel.finalModel;
+%         modelPredictFunc = @(testData) svmModel.predict(testData);
+%     elseif stfind(modelFolder,'LDA')
+%         modelPredictFunc = GetLDAPredictionFunc(loadedModel.finalModel);
+%         error('to do')
+%     else
+%         error('Online training unknwon model type')
+%     end
 
 
     %% online parameters
@@ -46,8 +47,10 @@ close all; clear; clc;
     preTrialPause = offlineParameters.preTrialPause;
     triggerWindowTime = offlineParameters.triggerWindowTime;
     preTriggerRecTime = offlineParameters.preTriggerRecTime;
+    calibrationTime = offlineParameters.calibrationTime;
+    downSampleRate = offlineParameters.downSampleRate;
 
-    % This is a heuristic that needs to be changed to allow shorter online phase than oflline training pahse
+    % This is a stupid way that needs to be changed to allow shorter online phase than oflline training pahse
     if ceil(1/oddBallProb)*numClasses >= 2*triggersInTrial 
         triggersInTrial = ceil(1/oddBallProb)*numClasses + startingNormalTriggers;
     end
@@ -60,13 +63,14 @@ close all; clear; clc;
                                                     triggerBankFolder, is_visual, ...
                                                     preTrialPause, maxRandomTimeBetweenTriggers);
 
-    %% predict
+    %% Preprocess
 
     [~, ~, processedEEG] = preprocessing(EEG, triggersTimes, trainingVector, ...
-                                                           preTriggerRecTime, triggerWindowTime);
-
-    testData = Models.processedDataTo2dMatrixMeanChannels(processedEEG, trainingVector, 1);
-    predictions = modelPredictFunc(testData);
+                                                           preTriggerRecTime, triggerWindowTime, ...
+                                                           downSampleRate);
+    %% Predict
+%     testData = Models.processedDataTo2dMatrixMeanChannels(processedEEG, trainingVector, 1);
+%     predictions = modelPredictFunc(testData);
 
     if sum(predictions) ~= 1
         set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
@@ -90,11 +94,11 @@ function [func] = GetLDAPredictionFunc(ldaStruct)
 end
 
 
-function [folderPath] = selectModelByAcc(baseDir)
-    modelsDir = [baseDir '\' Utils.Config.modelDirName '\'];
-    dirs = ls(modelsDir);
+function [folderPath] = selectModelByAcc(modelsDir)
+    dirs = dir(modelsDir);
+    dirs = {dirs.name};
+    dirs = {dirs{3:end}};       % remove . & ..
     sortedDirs = sort(dirs);
-    sortedDirs = sortedDirs(2:end, :);   % remove . & ..
-    bestModelDir = sortedDirs(1:end, :);
-    folderPath = [modelsDir bestModelDir '\'];
+    bestModelDir = sortedDirs{length(sortedDirs)};
+    folderPath = [modelsDir '\' bestModelDir '\'];
 end

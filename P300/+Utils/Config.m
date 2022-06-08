@@ -24,7 +24,7 @@ classdef Config
 %             * preTriggerRecTime = -0.2
 
         %% Others
-        modelDirName = 'allModels'
+        modelDirName = 'subjectsModels'
     end
     
     methods

@@ -9,6 +9,8 @@ class Const:
     training_labels: Tuple = ('trainingLabels.mat', 'trainingLabels')
     training_parameters: Tuple = ('parameters.mat', 'parametersToSave')
     triggers_time: Tuple = ('triggersTimes.mat', 'triggersTimes')
+    processed_eeg: Tuple = ('processedEEG', 'processedEEG')
+    eeg_classes: Tuple = ('trainingLabels', 'trainingLabels')
     time_pause_between_triggers: str = 'timeBetweenTriggers'
     hz: str = 'Hz'
     num_trials: str = 'numTrials'

@@ -1,4 +1,4 @@
-function [splitEeg, badTriggers] = splitTrials(EEG, triggersTimes, preTriggerRecTime, triggerWindowTime)
+function [splitEEG, badTriggers] = splitTrials(EEG, triggersTimes, preTriggerRecTime, triggerWindowTime)
 % Split all the trials to triggers
 % 
 % INPUT:
@@ -24,7 +24,7 @@ function [splitEeg, badTriggers] = splitTrials(EEG, triggersTimes, preTriggerRec
     badTriggers = {};
     badIdx = 1;
     % split to triggers
-    splitEeg = zeros(numTrials, numTriggersInTrial, eegChannels, windowSize);
+    splitEEG = zeros(numTrials, numTriggersInTrial, eegChannels, windowSize);
     for currTrial=1:numTrials
         currTrialEndTime = triggersTimes(currTrial, end);
         firstSampleRealTime = currTrialEndTime - totalRecordingTime;
@@ -61,7 +61,7 @@ function [splitEeg, badTriggers] = splitTrials(EEG, triggersTimes, preTriggerRec
                 final(:,1:split_size(2)) = split;
                 split = final;
             end
-            splitEeg(currTrial, currTrigger, :, :) = split;
+            splitEEG(currTrial, currTrigger, :, :) = split;
         end
     end
 end

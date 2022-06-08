@@ -34,6 +34,7 @@ function [splitEEG, meanTrigs, subtractedMean, processedEEG] = preprocessing(EEG
 %     finalWindowSize = windowSize;
 
 %% DownSampling
+                        
     processedEEG = downsampleEEG(subtractedMean, numTrials, classes, eegChannels, finalWindowSize, downSampleRate);
 
 end
@@ -47,7 +48,7 @@ function [meanTrigs] = averageTriggersByClass(splitEEG, numTrials, classes, eegC
     meanTrigs = zeros(numTrials, length(classes), eegChannels, windowSize);
     
     for currTrial=1:numTrials    
-        for class = classes.'
+        for class = classes
             meanTrigs(currTrial,class,:,:) = mean(splitEEG(currTrial,trainingVector(currTrial,:) == class,:,:),2);
         end
     end

@@ -18,8 +18,8 @@ function [EEG, trainingVec, triggersTime, backupTimes, fig, classesNames] = Onli
 %   - maxRandomTimeBetweenTriggers -  maximum amount of time that can be added between triggers randomly in seconds
 % 
 % OUTPUT:
-%   - EEG - raw EEG data from currnet recording. shape: #eeg channels, #eeg sample size
-%   - trainingVec - Triggers during training. shape: (# trials, trial length)
+%   - EEG - raw EEG data from currnet recording. shape: 1, #eeg channels, #eeg sample size
+%   - trainingVec - Triggers during training. shape: 1, # trials, trial length
 %   - triggersTime - times the triggers were activated with last value the dump time of buffer
 %   - backupTimes - times before the triggers were activated with last value the time before dumping the buffer
 %   - fig - The figure that is used to dispaly triggers and text
@@ -29,11 +29,15 @@ function [EEG, trainingVec, triggersTime, backupTimes, fig, classesNames] = Onli
 
     %% Set up recording
     [eegSampleSize, recordingBuffer, trainingSamples, diffTrigger, classesNames, activateTrigger, fig] = ...
-        RecordingSetup(timeBetweenTriggers, calibrationTime, triggersInTrial, triggerBankFolder, timeBeforeJitter, is_visual);
+        Recording.RecordingSetup(timeBetweenTriggers, calibrationTime, triggersInTrial, triggerBankFolder, timeBeforeJitter, is_visual);
 
 
     %% Recorod Subject Selection
-    [trainingVec, EEG, triggersTime, backupTimes] = Recording.SingleTrialRecording(...
+    triggersTime = zeros(1, triggersInTrial + 1, 1);
+    backupTimes = zeros(1, triggersInTrial + 1, 1);
+    EEG = zeros(1, Utils.Config.eegChannels, eegSampleSize);
+    trainingVec = ones(1, triggersInTrial);
+    [trainingVec(1,:), EEG(1,:,:), triggersTime(1,:,:), backupTimes(1,:,:)] = Recording.SingleTrialRecording(...
                         numClasses, oddBallProb, triggersInTrial, is_visual, ...
                         eegSampleSize, recordingBuffer, ...
                         maxRandomTimeBetweenTriggers, preTrialPause, timeBetweenTriggers , ...
@@ -41,7 +45,7 @@ function [EEG, trainingVec, triggersTime, backupTimes, fig, classesNames] = Onli
                         'Of your answer' , ' ');
 
     %% Finish Recording
-    endTrialTxt = 'Finished recording your response\nPlease wait';
+    endTrialTxt = '<html>Finished recording your response<br>Please wait';
 
     set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
     Recording.DisplayTextOnFig(endTrialTxt);
