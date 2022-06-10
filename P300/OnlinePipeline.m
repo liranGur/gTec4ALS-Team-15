@@ -5,7 +5,7 @@ function [] = OnlinePipeline()
 %clear any previous open windows - hopefully.
 close all; clear; clc;
 
-%% Load model & record parameters
+%% Select Folder & Set Parameters
 
     %%% Here we allow selecting only a user directory or a specific model directory
     modelFolder = GUIFiles.OnlineModelSelection('G:\.shortcut-targets-by-id\1EX7NmYYOTBYtpFCqH7TOhhm4mY31oi1O\P300-Recordings');
@@ -17,20 +17,8 @@ close all; clear; clc;
     if strcmp(finalFolder, Utils.Config.modelDirName)
         modelFolder = selectModelByAcc(modelFolder);
     end
-
-%     loadedModel = load(strcat(modelFolder, 'model.mat'));
-%     if stfind(modelFolder,'SVM')
-%         svmModel = loadedModel.finalModel;
-%         modelPredictFunc = @(testData) svmModel.predict(testData);
-%     elseif stfind(modelFolder,'LDA')
-%         modelPredictFunc = GetLDAPredictionFunc(loadedModel.finalModel);
-%         error('to do')
-%     else
-%         error('Online training unknwon model type')
-%     end
-
-
-    %% online parameters
+    
+    display(modelFolder);
 
     offlineParameters = load(strcat(modelFolder, 'parameters.mat'));
     offlineParameters = offlineParameters.parametersToSave;
@@ -55,42 +43,47 @@ close all; clear; clc;
         triggersInTrial = ceil(1/oddBallProb)*numClasses + startingNormalTriggers;
     end
 
-    %% Online Recording
-
-    [EEG, trainingVector, triggersTimes, ~, fig, classesNames] = Recording.OnlineTraining(...
-                                                    timeBetweenTriggers, calibrationTime, timeBeforeJitter,...
-                                                    numClasses, oddBallProb, triggersInTrial, ...
-                                                    triggerBankFolder, is_visual, ...
-                                                    preTrialPause, maxRandomTimeBetweenTriggers);
-
-    %% Preprocess
-
-    [~, ~, processedEEG] = preprocessing(EEG, triggersTimes, trainingVector, ...
-                                                           preTriggerRecTime, triggerWindowTime, ...
-                                                           downSampleRate);
-    %% Predict
-%     testData = Models.processedDataTo2dMatrixMeanChannels(processedEEG, trainingVector, 1);
-%     predictions = modelPredictFunc(testData);
-
-%     if sum(predictions) ~= 1
-%         set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
-%         Recording.DisplayTextOnFig('The model was unable to select an answer please try again');
-%     else
-%         predictionClass  = find(predictions == 1);
-%         set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
-%         Recording.DisplayTextOnFig(['The selected response was ' classesNames(predictionClass)]);
-%     end
+    %% Set up recording
+    [eegSampleSize, recordingBuffer, trainingSamples, diffTrigger, classesNames, activateTrigger, fig] = ...
+            Recording.RecordingSetup(timeBetweenTriggers, calibrationTime, triggersInTrial, triggerBankFolder, timeBeforeJitter, is_visual);
+        
+    %% Recording loop
     
-    GUIFiles.SuspendRun();
+    inferenceIdx = 1;
+    while 1
+        [EEG, trainingVector, triggersTimes, ~, fig, classesNames] = ...
+            Recording.OnlineTraining(numClasses, oddBallProb, triggersInTrial, is_visual, ...
+                                     maxRandomTimeBetweenTriggers, preTrialPause, timeBetweenTriggers, ...
+                                     eegSampleSize, recordingBuffer, trainingSamples, diffTrigger, ...
+                                     classesNames, activateTrigger, fig);
+
+        %% Preprocess
+        [~, ~, ~, processedEEG] = preprocessing(EEG, triggersTimes, trainingVector, ...
+                                                               preTriggerRecTime, triggerWindowTime, ...
+                                                               downSampleRate);
+        inferenceFile = ['rec_data_',int2str(inferenceIdx),'.mat'];
+        save(strcat(modelFolder, inferenceFile), 'processedEEG');
+        
+        %% Predict
+        pythonCommand = ['python .\PythonCode\OnlineInference.py' ' ' modelFolder ' ' inferenceFile];
+        [inferedClass, pyOutput] = system(pythonCommand, '-echo');
+        
+        if inferedClass == -1
+            set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
+            Recording.DisplayTextOnFig('The model was unable to select an answer please try again');
+        elseif inferedClass == 1    % This assumes there is an idle class TODO fix this
+            set(fig, 'color', 'black');
+            Recording.DisplayTextOnFig('<html>The model was unable to select an answer.<br>Probably some problem running the model<br>Program will close now');
+            error('Python script of online inference returned 1, there is probably some bug')
+        else
+            set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
+            Recording.DisplayTextOnFig(['The selected response was ' classesNames(inferedClass)]);
+        end
+
+        GUIFiles.SuspendRun();
+        inferenceIdx = inferenceIdx + 1;
+    end
                                                    
-end
-
-
-function [func] = GetLDAPredictionFunc(ldaStruct)
-    trainData = ldaStruct{1};
-    trainLabels = ldaStruct{2};
-    type = ldaStruct{3};
-    func = @(testData) classify(testData , trainData, trainLabels , type);
 end
 
 

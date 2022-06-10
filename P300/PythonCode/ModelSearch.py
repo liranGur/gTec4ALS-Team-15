@@ -13,7 +13,6 @@ from sklearn.svm import SVC
 import joblib
 from datetime import datetime
 
-import ModelSearchDataUtils
 from ModelSearchDataUtils import final_eeg_to_train_data, get_manipulation_func, mean_channels, concat_channels
 from utils import load_mat_data, log_data, start_log
 from config import Const, const
@@ -42,8 +41,8 @@ def select_best_model(results: List[Dict]) -> Dict:
     filtered_results = list(filter(lambda res: len(res['channels']) == min_chan_amount, results))
     if len(filtered_results) == 1:
         return filtered_results[0]
-    # random select - think about more ways
-    return filtered_results[0]
+    # "random" select - think about more ways
+    return filtered_results[-1]
 
 
 def grid_search_multiple_params(params_lst: List, x_train: np.ndarray, y_train: np.ndarray) -> Dict:
