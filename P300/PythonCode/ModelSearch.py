@@ -240,5 +240,5 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print('Not enough input parameters')
         exit(-1)
-    start_log(True)
+    start_log(True, 'train')
     main_search(*sys.argv[1:])
