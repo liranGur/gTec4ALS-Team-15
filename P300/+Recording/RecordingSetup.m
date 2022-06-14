@@ -25,7 +25,7 @@ function [eegSampleSize, recordingBuffer, trainingSamples, diffTrigger, classNam
 
 %% Set up parameters
 eegSampleSize = CalculateRecordingBufferSize(triggersInTrial, timeBetweenTriggers);
-% recordingBuffer = SetUpRecordingSimulink(Utils.Config.Hz, eegSampleSize);
+recordingBuffer = SetUpRecordingSimulink(Utils.Config.Hz, eegSampleSize);       % CHANGE FOR NO RECORDING
 recordingBuffer = 1;
 
 %% Load Train Samples
