@@ -6,7 +6,7 @@ function [fig, ax] =  DisplaySetUp()
 monitorPos = get(0,'MonitorPositions');
 monitorN = size(monitorPos, 1);
 % Which monitor to use TODO: make a parameter
-choosenMonitor = 2;
+choosenMonitor = 1;
 % If no 2nd monitor found, use the main monitor
 if choosenMonitor < monitorN
     choosenMonitor = 1;
