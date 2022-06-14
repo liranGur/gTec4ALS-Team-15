@@ -67,7 +67,7 @@ close all; clear; clc;
         save(strcat(modelFolder, inferenceFile), 'processedEEG');
         
         %% Predict
-        pythonCommand = ['C:\ArielPrograms\PythonVenvs\GeneralDsVenv\Scripts\python.exe .\PythonCode\OnlineInference.py' ' ' modelFolder ' ' inferenceFile];
+        pythonCommand = ['python .\PythonCode\OnlineInference.py' ' ' modelFolder ' ' inferenceFile];
         [exitStatus, pyOutput] = system(pythonCommand, '-echo');
         
         if exitStatus == -1
