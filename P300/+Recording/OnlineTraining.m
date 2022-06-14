@@ -41,7 +41,7 @@ function [EEG, trainingVec, triggersTime, backupTimes, fig, classesNames] = ...
                                        'Of your answer' , ' ');
 
     %% Finish Recording
-    endTrialTxt = '<html>Finished recording your response<br>Please wait';
+    endTrialTxt = 'Finished recording your response\n Please wait';
 
     set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
     Recording.DisplayTextOnFig(endTrialTxt);
