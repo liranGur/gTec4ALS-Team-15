@@ -9,7 +9,7 @@ import warnings
 HZ = 512
 
 
-def butter_bandpass(lowcut, highcut, fs, order=5):
+def butter_bandpass(lowcut, highcut, fs, order):
     return butter(order, [lowcut, highcut], fs=fs, btype='band')
 
 
@@ -102,17 +102,14 @@ def load_data(folder_path: str):
     return raw_eeg, training_vector, training_labels, triggers_times
 
 
-def preprocess(folder_path):
-    low_lim = 0.5
-    high_lim = 40
-    pre_trigger_time = 0.2
-    post_trigger_time = 1
-    down_sample_factor = 60
+def preprocess(folder_path, low_lim=0.5, high_lim=40, pre_trigger_time=-0.2,
+               post_trigger_time=0.6, down_sample_factor=60):
 
     raw_eeg, training_vector, training_labels, triggers_times = load_data(folder_path)
 
-    bandpass_eeg = bandpass(raw_eeg, low_lim, high_lim)
-    scipy.io.savemat(os.path.join(folder_path, 'bandpassPy.mat'), {'bandpass': bandpass_eeg})
+    # bandpass_eeg = bandpass(raw_eeg, low_lim, high_lim)
+    # scipy.io.savemat(os.path.join(folder_path, 'bandpassPy.mat'), {'bandpass': bandpass_eeg})
+    bandpass_eeg = raw_eeg
 
     split_eeg = split_eeg_by_triggers(bandpass_eeg, triggers_times, pre_trigger_time, post_trigger_time)
     scipy.io.savemat(os.path.join(folder_path, 'splitEEGPy.mat'), {'splitEEG': split_eeg})
@@ -123,7 +120,9 @@ def preprocess(folder_path):
     down_sampled_eeg = down_sample_eeg(average_eeg, down_sample_factor)
     scipy.io.savemat(os.path.join(folder_path, 'downsampledEEGPy.mat'), {'downsampledEEG': down_sampled_eeg})
 
+    return bandpass_eeg, split_eeg, average_eeg, down_sampled_eeg
+
 
 if __name__ == '__main__':
-    folder_path_ = 'C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\100\\03-May-2022 12-08-47'
+    folder_path_ = 'C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\100\\25-May-2022 no_bp\\'
     preprocess(folder_path_)

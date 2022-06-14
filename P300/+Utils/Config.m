@@ -22,6 +22,9 @@ classdef Config
         % for using models set the following:
 %             * triggerWindowTime = 0.6
 %             * preTriggerRecTime = -0.2
+
+        %% Others
+        modelDirName = 'subjectsModels'
     end
     
     methods

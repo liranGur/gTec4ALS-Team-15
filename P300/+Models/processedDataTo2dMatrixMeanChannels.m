@@ -5,7 +5,7 @@ function [data, targetsVector] = processedDataTo2dMatrixMeanChannels(processedEE
 % INPUTS:
 %   - processedEEG - EEG data after preprocessing. shape: #trials, #classe, eegChannels, data size after preprocessing
 %   - trainingClasses - vector of target class in each trial
-%   - ignoreBaeClass - should ignore call id 1
+%   - ignoreBaeClass - should ignore class id 1
 % 
 % OUTPUTS:
 %   - data - 2d matrix for LDA. each row is each sample (trial*num classes) and columns are the samples EEG data
