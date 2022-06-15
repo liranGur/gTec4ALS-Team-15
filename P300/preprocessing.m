@@ -19,9 +19,9 @@ function [splitEEG, meanTrigs, subtractedMean, processedEEG] = preprocessing(EEG
 %% Bandpass TODO
     bandpassedEEG = EEG;
 
-%% Laplacian
+%% Laplacian ADD?
     chanMap = Utils.Config.chanMap;
-    bandpassedEEG = laplacian(bandpassedEEG,chanMap('PO3'), cell2mat(values(chanMap,{'PO7', 'P3','O1','POZ'})));
+    %bandpassedEEG = laplacian(bandpassedEEG,chanMap('PO3'), cell2mat(values(chanMap,{'PO7', 'P3','O1','POZ'})));
 
 %% Splitting
     preTriggerTimeForMean = 0.2;
