@@ -24,22 +24,38 @@ def get_inference_data(folder_path: str, data_file_name: str) -> np.ndarray:
     processed_eeg = load_mat_data((data_file_name, const.processed_eeg[1]), folder_path)
     manipulated_data = manipulation_func([processed_eeg[:, :, channels, :]])
     x_data, _ = final_eeg_to_train_data(np.array(manipulated_data[0]), None)
-    return x_data
+    return x_data[:3]
 
 
-def infer_data(folder_path: str, data_file_name: str) -> int:
+def infer_data(folder_path: str, data_file_name: str, min_prob: float = 0.6, min_dif: float = 0.1) -> int:
     model = load_model(folder_path)
+    log_data('received parameters', sys.argv[1:], f'  thresholds: {min_prob:=} , {min_dif:=}')
     data = get_inference_data(folder_path, data_file_name)
-    preds = model.predict(data)
-    if np.sum(preds) != 1:
-        log_data(f"Predictions aren't good enough - preds: {preds}", )
-        exit(-1)
-    log_data(f'predicitons: {preds}')
-    selected_class = np.argwhere(preds == 1.)[0, 0] + 2     # TODO think how to add here skip idle class data
-    log_data(f'Selected class: {selected_class}')
-    scipy.io.matlab.savemat(os.path.join(folder_path, 'predictions.mat'), {'predictions': selected_class})
-    print(selected_class)
-    return selected_class
+    try:
+        preds_probs = model.predict_proba(data)
+        log_data('predictions probabilities: ', preds_probs.tolist())
+        preds = model.predict(data)
+        log_data('Predictions are: ', preds.tolist())
+        if max(preds_probs) < min_prob:
+            log_data('max value is too small')
+            exit(-1)
+        top_idx = np.argsort(preds_probs)[-2:]
+        if top_idx[0] - top_idx[1] < min_dif:
+            log_data('Difference between top 2 classes is too small')
+            exit(-2)
+        matlab_class_idx = top_idx[0] + 2   # 1 for matlab indexing and 1 for skipping idle class
+    except AttributeError:
+        log_data("Can't use predict proba")
+        preds = model.predict(data)
+        log_data('Predictions are: ', preds.tolist())
+        if np.sum(preds) != 1:
+            log_data('Failed to ge a class sum != 1')
+            exit(-3)
+        matlab_class_idx = np.argwhere(preds == 1.)[0, 0] + 2  # 1 for matlab indexing and 1 for skipping idle class
+    log_data(f'Selected class: {matlab_class_idx}')
+    scipy.io.matlab.savemat(os.path.join(folder_path, 'predictions.mat'), {'predictions': matlab_class_idx})
+    print(matlab_class_idx)
+    return matlab_class_idx
 
 
 if __name__ == '__main__':

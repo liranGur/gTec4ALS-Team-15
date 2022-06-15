@@ -67,10 +67,10 @@ close all; clear; clc;
         save(strcat(modelFolder, inferenceFile), 'processedEEG');
         
         %% Predict
-        pythonCommand = ['python .\PythonCode\OnlineInference.py' ' ' modelFolder ' ' inferenceFile];
+        pythonCommand = ['python .\PythonCode\OnlineInference.py' ' ' modelFolder ' ' inferenceFile ' 0.6 0.1'];
         [exitStatus, pyOutput] = system(pythonCommand, '-echo');
         
-        if exitStatus == -1
+        if exitStatus < 0
             set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
             Recording.DisplayTextOnFig('The model was unable to select an answer please try again');
         else
