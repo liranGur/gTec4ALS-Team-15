@@ -33,7 +33,7 @@ def infer_data(folder_path: str, data_file_name: str) -> int:
     preds = model.predict(data)
     if np.sum(preds) != 1:
         log_data(f"Predictions aren't good enough - preds: {preds}", )
-        return -1
+        exit(-1)
     log_data(f'predicitons: {preds}')
     selected_class = np.argwhere(preds == 1.)[0, 0] + 2     # TODO think how to add here skip idle class data
     log_data(f'Selected class: {selected_class}')
@@ -46,6 +46,5 @@ if __name__ == '__main__':
     if len(sys.argv) < 3:
         print('Not enough input parameters')
         exit(-1)
-    start_log(False)
+    start_log(False, 'infer')
     selected_class_ = infer_data(*sys.argv[1:])
-    exit(selected_class_)

@@ -1,6 +1,5 @@
 import itertools
-import json
-import logging
+import json 
 import os
 import sys
 from functools import partial
@@ -61,7 +60,7 @@ def grid_search_multiple_params(params_lst: List, x_train: np.ndarray, y_train: 
         if gs.best_score_ > best_acc:
             best_acc = gs.best_score_
             best_params = gs.best_params_
-        log_data('curr params search:', curr_params, 'results: ', best_acc, best_params)
+        # log_data('results: ', best_acc, best_params)
 
     return {'accuracy': best_acc,
             'parameters': best_params,
@@ -111,6 +110,7 @@ def channel_search_general(channels_comb_lst: List, data_manipulation_func: Call
     final_results = model_search_results[best_res_idx]
     for idx, curr_res in enumerate(final_results):
         curr_res['channels'] = channels_comb_lst[best_res_idx[idx]]
+        log_data(f'results: {curr_res}')
     final_selected_model = select_best_model(final_results)
     return final_selected_model
 
@@ -124,7 +124,6 @@ def mean_channel_search(channels_comb: Set, processed_eeg: np.ndarray,
     :param training_labels: list of training labels with len: #trials
     :return: A dictionary of the results of the best selected model, with keys: accuracy, parameters, channels
     """
-    log_data('mean search on channels:', channels_comb)
     filtered_data = [processed_eeg[:, :, curr_chans, :] for curr_chans in channels_comb]
     search_func = partial(svm_hp_search, train_labels=training_labels)
     search_res = channel_search_general(list(channels_comb), mean_channels,
@@ -141,7 +140,6 @@ def concat_channel_search(channels_comb: Set, processed_eeg: np.ndarray,
     :param training_labels: list of training labels with len: #trials
     :return: A dictionary of the results of the best selected model, with keys: accuracy, parameters, channels and
     """
-    log_data('concat channels search on channels:', channels_comb)
     filtered_data = [processed_eeg[:, :, curr_chans, :] for curr_chans in channels_comb]
     search_func = partial(svm_hp_search, train_labels=training_labels)
     search_res = channel_search_general(list(channels_comb), concat_channels,
@@ -157,7 +155,8 @@ def channels_search(processed_eeg: np.ndarray, training_labels: Union[List, np.n
     :return: A dictionary of the results of the best selected model, with keys: accuracy, parameters, channels
     """
     # create channels combination search
-    channels_to_use = [11, 2, 7]  # [0, 1, 2, 4, 5, 6, 9, 11, 15]
+    #   [1,2,4,6,7,8,11,13,15] 0, 12
+    channels_to_use = [1, 2, 4, 6, 7, 8, 11, 13, 15]  # [0, 1, 2, 4, 5, 6, 9, 11, 15]
     channels_comb = [list(itertools.combinations(channels_to_use, i)) for i in range(1, len(channels_to_use))]
     channels_comb = set([y for x in channels_comb for y in x])
     # Do channels search with hp search
@@ -240,5 +239,5 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print('Not enough input parameters')
         exit(-1)
-    start_log(True)
+    start_log(True, 'train')
     main_search(*sys.argv[1:])

@@ -12,8 +12,8 @@ baseFolder = uigetdir('G:\.shortcut-targets-by-id\1EX7NmYYOTBYtpFCqH7TOhhm4mY31o
 [is_visual, triggersInTrial, numClasses, subId, numTrials, timeBetweenTriggers, oddBallProb, ...
     calibrationTime, pauseBetweenTrials, triggerBankFolder, beforeJitterTime] = GUIFiles.ParametersGui();
 
-
-recordingFolder = [baseFolder '\' int2str(subId) '\' strrep(datestr(now), ':','-') '\'];
+currDateTime = strrep(strrep(datestr(now), ':','-'), ' ', '_');
+recordingFolder = [baseFolder '\' int2str(subId) '\' currDateTime '\'];
 mkdir(recordingFolder);
 
 %% Training
@@ -67,6 +67,7 @@ save(strcat(recordingFolder, 'processedEEG.mat'), 'processedEEG');
 %% Models
 
 modelDir = [baseFolder '\' int2str(subId) '\' Utils.Config.modelDirName '\'];
+mkdir(modelDir)
 pythonCommand = ['python PythonCode\ModelSearch.py ' recordingFolder ' ' modelDir];
 [pyStatus, pyOutput] = system(pythonCommand, '-echo');
 

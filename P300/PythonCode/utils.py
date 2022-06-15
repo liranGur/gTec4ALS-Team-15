@@ -34,9 +34,9 @@ def load_parameters(folder: str) -> Dict:
     return parameters
 
 
-def start_log(print_log):
+def start_log(print_log, name: str):
     global PRINT_LOG
-    logging.basicConfig(filename=os.path.join(sys.argv[1], 'py_debug.txt'), level=logging.DEBUG)
+    logging.basicConfig(filename=os.path.join(sys.argv[1], f'py_debug_{name}.txt'), level=logging.DEBUG)
     PRINT_LOG = print_log
 
 
