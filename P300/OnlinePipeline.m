@@ -41,8 +41,9 @@ close all; clear; clc;
     downSampleRate = offlineParameters.downSampleRate;
 
     % This is a stupid way that needs to be changed to allow shorter online phase than oflline training pahse
-    if ceil(1/oddBallProb)*numClasses >= 2*triggersInTrial 
-        triggersInTrial = ceil(1/oddBallProb)*numClasses + startingNormalTriggers;
+    safety = 5;
+    if ceil(1/oddBallProb)*numClasses > triggersInTrial + safety
+        triggersInTrial = ceil(1/oddBallProb)*numClasses + startingNormalTriggers + safety;
     end
 
     %% Set up recording

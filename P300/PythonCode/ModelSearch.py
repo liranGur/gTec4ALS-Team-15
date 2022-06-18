@@ -206,6 +206,54 @@ def save_data_for_matlab(models_folder, recording_folder_path, model, result):
     return save_dir
 
 
+def main_ensemble_search(recording_folder_path):
+    processed_eeg, training_labels = load_data(recording_folder_path)
+    ensemble_search_hp(processed_eeg, training_labels)
+
+
+def ensemble_search_hp(processed_eeg, training_labels):
+    channel_accs = list()
+    best_params = list()
+    selected_channels = list()
+    for channel in np.arange(16):
+        curr_eeg = processed_eeg[:, :, channel, :]
+        curr_ans = svm_hp_search(curr_eeg, training_labels)
+        if curr_ans['accuracy'] > 0.8:
+            channel_accs.append(curr_ans['accuracy'])
+            best_params.append(curr_ans['parameters'])
+            selected_channels.append(channel)
+        # channel_accs.append(curr_ans['accuracy'])
+        # best_params.append(curr_ans['parameters'])
+
+    from sklearn.model_selection import KFold
+    indices = np.arange(len(training_labels))
+
+    all_accs = list()
+    for train_idx, test_idx in KFold(n_splits=3).split(indices):
+        all_preds = list()
+        y_true = None
+        for idx, channel in enumerate(selected_channels):
+            data, labels = final_eeg_to_train_data(processed_eeg[:, :, channel, :], training_labels)
+            x_train = data[train_idx]
+            y_train = labels[train_idx]
+            x_test = data[test_idx]
+            if y_true is None:
+                y_true = labels[test_idx]
+            assert np.all(y_true == labels[test_idx])
+            curr_model = SVC(**best_params[idx])
+            curr_model.fit(x_train, y_train)
+            all_preds.append(curr_model.predict(x_test))
+
+        votes = np.mean(all_preds, axis=0)
+        final_preds = votes >= len(selected_channels)
+        final_preds = final_preds.astype('int')
+        all_accs.append(np.sum(final_preds == y_true)/len(y_true))
+
+    print(f'{all_accs}')
+    print(f'final acc: {np.mean(all_accs)}')
+
+
+
 def main_search(recording_folder_path: str, models_folder: Optional[str] = None, search_channels=True):
     """
     This function preforms hyperparameter and channel search (if selected) creates the best model and saves it to the
@@ -241,3 +289,4 @@ if __name__ == '__main__':
         exit(-1)
     start_log(True, 'train')
     main_search(*sys.argv[1:])
+    # main_ensemble_search(sys.argv[1])
