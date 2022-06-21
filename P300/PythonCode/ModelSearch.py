@@ -155,7 +155,6 @@ def channels_search(processed_eeg: np.ndarray, training_labels: Union[List, np.n
     :return: A dictionary of the results of the best selected model, with keys: accuracy, parameters, channels
     """
     # create channels combination search
-    #   [1,2,4,6,7,8,11,13,15] 0, 12
     channels_to_use = [1, 2, 4, 6, 7, 8, 11, 13, 15]  # [0, 1, 2, 4, 5, 6, 9, 11, 15]
     channels_comb = [list(itertools.combinations(channels_to_use, i)) for i in range(1, len(channels_to_use))]
     channels_comb = set([y for x in channels_comb for y in x])
@@ -251,7 +250,6 @@ def ensemble_search_hp(processed_eeg, training_labels):
 
     print(f'{all_accs}')
     print(f'final acc: {np.mean(all_accs)}')
-
 
 
 def main_search(recording_folder_path: str, models_folder: Optional[str] = None, search_channels=True):
