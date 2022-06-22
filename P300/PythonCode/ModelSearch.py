@@ -77,12 +77,14 @@ def svm_hp_search(train_data: np.ndarray, train_labels: Union[List, np.ndarray])
     x_train, y_train = final_eeg_to_train_data(train_data, train_labels)
     params_ops = [{'kernel': ['rbf', 'sigmoid'],
                    'C': [0.5, 0.75, 1, 1.25, 1.5],
-                   'shrinking': [True, False]
+                   'shrinking': [True, False],
+                   'probability': [True]
                    },
                   {'kernel': ['poly'],
                    'C': [0.75, 1, 1.25],
                    'degree': [2, 3, 4],
-                   'shrinking': [True, False]
+                   'shrinking': [True, False],
+                   'probability': [True]
                    },
                   ]
     return grid_search_multiple_params(params_ops, x_train, y_train)

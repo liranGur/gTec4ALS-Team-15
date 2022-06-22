@@ -27,9 +27,26 @@ def get_inference_data(folder_path: str, data_file_name: str) -> np.ndarray:
     return x_data[:3]
 
 
-def infer_data(folder_path: str, data_file_name: str, min_prob: float = 0.6, min_dif: float = 0.1) -> int:
+def probabilities_decision_func(probs, targets_diff=0.1, inner_diff=0.15, min_proba_strong=0.5, min_proba_weak=0.4):
+    num_possible_classes = 2
+    trigger_probs = probs[:, 1]
+    top_indices = list(reversed(np.argsort(trigger_probs)[-num_possible_classes:]))
+    top_vals = trigger_probs[top_indices]
+    if top_vals[0] >= min_proba_weak and np.subtract(*top_vals) >= targets_diff / 2:
+        return top_indices[0]
+    if top_vals[0] >= min_proba_strong:
+        if np.subtract(*top_vals) >= targets_diff:
+            return top_indices[0]
+    if probs[0, top_indices[0]] - probs[1, top_indices[0]] > inner_diff:
+        return top_indices[0]
+
+    return -1
+
+
+def infer_data(folder_path: str, data_file_name: str, targets_diff: float = 0.1,
+               inner_diff: float = 0.15, min_proba_strong: float = 0.5, min_proba_weak: float = 0.4) -> int:
     model = load_model(folder_path)
-    log_data('received parameters', sys.argv[1:], f'  thresholds: {min_prob:=} , {min_dif:=}')
+    log_data('received parameters', sys.argv[1:], f'  thresholds: {min_prob} , min-df: {min_dif}')
     data = get_inference_data(folder_path, data_file_name)
     try:
         preds_probs = model.predict_proba(data)
