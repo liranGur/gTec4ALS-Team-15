@@ -27,7 +27,18 @@ def get_inference_data(folder_path: str, data_file_name: str) -> np.ndarray:
     return x_data[:3]
 
 
-def probabilities_decision_func(probs, targets_diff=0.1, inner_diff=0.15, min_proba_strong=0.5, min_proba_weak=0.4):
+def probabilities_decision_func(probs: np.ndarray, targets_diff: float, inner_diff: float, min_proba_strong: float,
+                                min_proba_weak: float):
+    """
+    Select class based on probabilities
+    :param probs: array of predict_proba result for model,
+                  shape: #classes for classification, #2 (number of possible classifications)
+    :param targets_diff: minimal difference between the top 2 probabilities for each possible class
+    :param inner_diff:
+    :param min_proba_strong:
+    :param min_proba_weak:
+    :return:
+    """
     num_possible_classes = 2
     trigger_probs = probs[:, 1]
     top_indices = list(reversed(np.argsort(trigger_probs)[-num_possible_classes:]))
@@ -46,29 +57,32 @@ def probabilities_decision_func(probs, targets_diff=0.1, inner_diff=0.15, min_pr
 def infer_data(folder_path: str, data_file_name: str, targets_diff: float = 0.1,
                inner_diff: float = 0.15, min_proba_strong: float = 0.5, min_proba_weak: float = 0.4) -> int:
     model = load_model(folder_path)
-    log_data('received parameters', sys.argv[1:], f'  thresholds: {min_prob} , min-df: {min_dif}')
+    log_data('received parameters', sys.argv[1:], f'{targets_diff=}, {inner_diff=}, {min_proba_strong=}, {min_proba_weak=}')
     data = get_inference_data(folder_path, data_file_name)
+    preds = model.predict(data)
+    log_data('Predictions are: ', preds.tolist())
     try:
-        preds_probs = model.predict_proba(data)
-        log_data('predictions probabilities: ', preds_probs.tolist())
-        preds = model.predict(data)
-        log_data('Predictions are: ', preds.tolist())
-        if max(preds_probs) < min_prob:
-            log_data('max value is too small')
-            exit(-1)
-        top_idx = np.argsort(preds_probs)[-2:]
-        if top_idx[0] - top_idx[1] < min_dif:
-            log_data('Difference between top 2 classes is too small')
-            exit(-2)
-        matlab_class_idx = top_idx[0] + 2   # 1 for matlab indexing and 1 for skipping idle class
+        probs = model.predict_proba(data)
+        log_data('predictions probabilities: {probs.tolist()}')
+        if np.sum(preds) == 1:
+            log_data('Using Preds !!!')
+            class_ans = np.argwhere(preds == 1.)[0, 0]
+        else:
+            log_data('Preds failed trying probabilities')
+            class_ans = probabilities_decision_func(probs, targets_diff, inner_diff, min_proba_strong, min_proba_weak)
+            if class_ans == -1:
+                log_data('Failed to predict based on probabilities')
+                print(-1)
+                exit(-1)
+
     except AttributeError:
-        log_data("Can't use predict proba")
-        preds = model.predict(data)
-        log_data('Predictions are: ', preds.tolist())
+        log_data('Model has no predict_proba using only preds')
+        class_ans = np.argwhere(preds == 1.)[0, 0]
         if np.sum(preds) != 1:
-            log_data('Failed to ge a class sum != 1')
-            exit(-3)
-        matlab_class_idx = np.argwhere(preds == 1.)[0, 0] + 2  # 1 for matlab indexing and 1 for skipping idle class
+            log_data('Failed to predict based on preds')
+            exit(-2)
+
+    matlab_class_idx = class_ans + 2  # 1 for matlab indexing and 1 for skipping idle class
     log_data(f'Selected class: {matlab_class_idx}')
     scipy.io.matlab.savemat(os.path.join(folder_path, 'predictions.mat'), {'predictions': matlab_class_idx})
     print(matlab_class_idx)
