@@ -69,7 +69,7 @@ close all; clear; clc;
         save(strcat(modelFolder, inferenceFile), 'processedEEG');
         
         %% Predict
-        pythonCommand = ['python .\PythonCode\OnlineInference.py' ' ' modelFolder ' ' inferenceFile ' 0.1 0.15 0.5 0.4 '];
+        pythonCommand = ['python .\PythonCode\OnlineInference.py' ' ' modelFolder ' ' inferenceFile ' 0.1 0.2 0.5 0.4 '];
         [exitStatus, pyOutput] = system(pythonCommand, '-echo');
         
         if exitStatus < 0
