@@ -42,8 +42,9 @@ close all; clear; clc;
 
     % This is a stupid way that needs to be changed to allow shorter online phase than oflline training pahse
     safety = 5;
-    if ceil(1/oddBallProb)*(numClasses+1) > triggersInTrial + safety
-        triggersInTrial = ceil(1/oddBallProb)*numClasses + startingNormalTriggers + safety;
+    possibleLen = ceil(1/oddBallProb)*numClasses*4 + startingNormalTriggers + safety;
+    if possibleLen < triggersInTrial
+        triggersInTrial = possibleLen;
     end
 
     %% Set up recording
