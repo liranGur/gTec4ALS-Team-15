@@ -91,7 +91,7 @@ def check_known_infer(folder_path: str, min_prob: float = 0.4, min_dif: float = 
         model = load_model(folder_path)
         data = get_inference_data(folder_path, file_name)
         curr_probs = model.predict_proba(data)
-        ans = probabilities_decision_func(curr_probs)
+        ans = probabilities_decision_func(curr_probs, 0.1, 0.15, 0.5, 0.4)
         print(f'{file_name}   -   {ans_dict[ans]}')
 # </editor-fold>
 

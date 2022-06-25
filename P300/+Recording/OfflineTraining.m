@@ -41,7 +41,7 @@ backupTimes = zeros(numTrials, (triggersInTrial+1));
 %% Training
 
 for currTrial = 1:numTrials
-    targetClass = round((numClasses-1)*rand) + 2;
+    targetClass = randi(numClasses) + 1;
     expectedClasses(currTrial) = targetClass;
     assert(targetClass > 1 & targetClass <= (numClasses+1), 'Sanity check target class')
    

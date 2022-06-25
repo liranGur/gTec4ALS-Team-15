@@ -43,12 +43,11 @@ def probabilities_decision_func(probs: np.ndarray, targets_diff: float, inner_di
     trigger_probs = probs[:, 1]
     top_indices = list(reversed(np.argsort(trigger_probs)[-num_possible_classes:]))
     top_vals = trigger_probs[top_indices]
-    if top_vals[0] >= min_proba_weak and np.subtract(*top_vals) >= targets_diff / 2:
+    if top_vals[0] >= min_proba_strong and np.subtract(*top_vals) >= targets_diff / 2:
         return top_indices[0]
-    if top_vals[0] >= min_proba_strong:
-        if np.subtract(*top_vals) >= targets_diff:
-            return top_indices[0]
-    if probs[0, top_indices[0]] - probs[1, top_indices[0]] > inner_diff:
+    if top_vals[0] >= min_proba_weak and np.subtract(*top_vals) >= targets_diff:
+        return top_indices[0]
+    if top_vals[0] > 1-inner_diff:
         return top_indices[0]
 
     return -1
@@ -94,4 +93,8 @@ if __name__ == '__main__':
         print('Not enough input parameters')
         exit(-1)
     start_log(False, 'infer')
-    selected_class_ = infer_data(*sys.argv[1:])
+    if len(sys.argv) == 7:
+        selected_class_ = infer_data(sys.argv[1], sys.argv[2], float(sys.argv[3]), float(sys.argv[4]),
+                                     float(sys.argv[5]), float(sys.argv[6]))
+    else:
+        selected_class_ = infer_data(sys.argv[1], sys.argv[2])
