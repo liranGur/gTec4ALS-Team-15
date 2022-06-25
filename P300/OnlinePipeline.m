@@ -41,8 +41,9 @@ close all; clear; clc;
     downSampleRate = offlineParameters.downSampleRate;
 
     % This is a stupid way that needs to be changed to allow shorter online phase than oflline training pahse
-    if ceil(1/oddBallProb)*numClasses >= 2*triggersInTrial 
-        triggersInTrial = ceil(1/oddBallProb)*numClasses + startingNormalTriggers;
+    safety = 5;
+    if ceil(1/oddBallProb)*(numClasses+1) > triggersInTrial + safety
+        triggersInTrial = ceil(1/oddBallProb)*numClasses + startingNormalTriggers + safety;
     end
 
     %% Set up recording
@@ -67,10 +68,10 @@ close all; clear; clc;
         save(strcat(modelFolder, inferenceFile), 'processedEEG');
         
         %% Predict
-        pythonCommand = ['python .\PythonCode\OnlineInference.py' ' ' modelFolder ' ' inferenceFile];
+        pythonCommand = ['python .\PythonCode\OnlineInference.py' ' ' modelFolder ' ' inferenceFile ' 0.1 0.15 0.5 0.4 '];
         [exitStatus, pyOutput] = system(pythonCommand, '-echo');
         
-        if exitStatus == -1
+        if exitStatus < 0
             set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
             Recording.DisplayTextOnFig('The model was unable to select an answer please try again');
         else

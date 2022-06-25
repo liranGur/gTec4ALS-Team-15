@@ -49,5 +49,5 @@ function [name] = getClassNameFromFileName(file_name)
     start_loc = start_loc(1);
     end_loc = strfind(file_name, '.');
     end_loc = end_loc(1);
-    name = file_name(start_loc:(end_loc-1));
+    name = file_name(start_loc+1:(end_loc-1));
 end
