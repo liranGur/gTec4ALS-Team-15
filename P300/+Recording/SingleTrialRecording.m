@@ -37,8 +37,13 @@ function [trainingVec, trialEEG, triggersTime, backupTimes] = SingleTrialRecordi
     
     trainingVec = Utils.TrainingVecCreator(numClasses, oddBallProb, triggersInTrial, is_visual);
     assert(all(trainingVec <= (numClasses + 1)), 'Sanity check training Vector')
-    Recording.DisplayTextOnFig(['Starting Trial ' currTrialStr sprintf('\n') ...
+    %Recording.DisplayTextOnFig(['Starting Trial ' currTrialStr sprintf('\n') ...
                                      ' Please count the apperances of the class ' expectedClassName]);
+    % quick patch (ugly, I know)
+    expectedClassFig = strcat("count-class\count_", expectedClassName,".jpg");
+    Recording.DisplayTextOnFig(['Starting Trial ' currTrialStr]);
+    pause(1);
+    Recording.DispalyImageWrapper(expectedClassFig);
      
 %% Pre-trial
     % Show base image for a few seconds before trial starts
