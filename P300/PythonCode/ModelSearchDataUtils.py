@@ -33,7 +33,7 @@ def final_eeg_to_train_data(eeg_data: np.ndarray, labels: Optional[Union[List, n
         * training labels - vector of 0 or 1 for binary classification, shape: #trial*#non_idle_classes, sample
     """
     # TODO think about how to know if there is an idle class
-    log_data(f'skipping idle class: {remove_idle_cls}')
+    # log_data(f'skipping idle class: {remove_idle_cls}')
 
     num_trials = eeg_data.shape[0]
     if remove_idle_cls:

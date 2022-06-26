@@ -1,6 +1,5 @@
 import itertools
-import json
-import logging
+import json 
 import os
 import sys
 from functools import partial
@@ -61,7 +60,7 @@ def grid_search_multiple_params(params_lst: List, x_train: np.ndarray, y_train: 
         if gs.best_score_ > best_acc:
             best_acc = gs.best_score_
             best_params = gs.best_params_
-        log_data('curr params search:', curr_params, 'results: ', best_acc, best_params)
+        # log_data('results: ', best_acc, best_params)
 
     return {'accuracy': best_acc,
             'parameters': best_params,
@@ -78,12 +77,14 @@ def svm_hp_search(train_data: np.ndarray, train_labels: Union[List, np.ndarray])
     x_train, y_train = final_eeg_to_train_data(train_data, train_labels)
     params_ops = [{'kernel': ['rbf', 'sigmoid'],
                    'C': [0.5, 0.75, 1, 1.25, 1.5],
-                   'shrinking': [True, False]
+                   'shrinking': [True, False],
+                   'probability': [True]
                    },
                   {'kernel': ['poly'],
                    'C': [0.75, 1, 1.25],
                    'degree': [2, 3, 4],
-                   'shrinking': [True, False]
+                   'shrinking': [True, False],
+                   'probability': [True]
                    },
                   ]
     return grid_search_multiple_params(params_ops, x_train, y_train)
@@ -111,6 +112,7 @@ def channel_search_general(channels_comb_lst: List, data_manipulation_func: Call
     final_results = model_search_results[best_res_idx]
     for idx, curr_res in enumerate(final_results):
         curr_res['channels'] = channels_comb_lst[best_res_idx[idx]]
+        log_data(f'results: {curr_res}')
     final_selected_model = select_best_model(final_results)
     return final_selected_model
 
@@ -124,7 +126,6 @@ def mean_channel_search(channels_comb: Set, processed_eeg: np.ndarray,
     :param training_labels: list of training labels with len: #trials
     :return: A dictionary of the results of the best selected model, with keys: accuracy, parameters, channels
     """
-    log_data('mean search on channels:', channels_comb)
     filtered_data = [processed_eeg[:, :, curr_chans, :] for curr_chans in channels_comb]
     search_func = partial(svm_hp_search, train_labels=training_labels)
     search_res = channel_search_general(list(channels_comb), mean_channels,
@@ -141,7 +142,6 @@ def concat_channel_search(channels_comb: Set, processed_eeg: np.ndarray,
     :param training_labels: list of training labels with len: #trials
     :return: A dictionary of the results of the best selected model, with keys: accuracy, parameters, channels and
     """
-    log_data('concat channels search on channels:', channels_comb)
     filtered_data = [processed_eeg[:, :, curr_chans, :] for curr_chans in channels_comb]
     search_func = partial(svm_hp_search, train_labels=training_labels)
     search_res = channel_search_general(list(channels_comb), concat_channels,
@@ -157,7 +157,7 @@ def channels_search(processed_eeg: np.ndarray, training_labels: Union[List, np.n
     :return: A dictionary of the results of the best selected model, with keys: accuracy, parameters, channels
     """
     # create channels combination search
-    channels_to_use = [11, 2, 7]  # [0, 1, 2, 4, 5, 6, 9, 11, 15]
+    channels_to_use = [1, 2, 4, 6, 7, 8, 11, 13, 15]  # [0, 1, 2, 4, 5, 6, 9, 11, 15]
     channels_comb = [list(itertools.combinations(channels_to_use, i)) for i in range(1, len(channels_to_use))]
     channels_comb = set([y for x in channels_comb for y in x])
     # Do channels search with hp search
@@ -207,6 +207,53 @@ def save_data_for_matlab(models_folder, recording_folder_path, model, result):
     return save_dir
 
 
+def main_ensemble_search(recording_folder_path):
+    processed_eeg, training_labels = load_data(recording_folder_path)
+    ensemble_search_hp(processed_eeg, training_labels)
+
+
+def ensemble_search_hp(processed_eeg, training_labels):
+    channel_accs = list()
+    best_params = list()
+    selected_channels = list()
+    for channel in np.arange(16):
+        curr_eeg = processed_eeg[:, :, channel, :]
+        curr_ans = svm_hp_search(curr_eeg, training_labels)
+        if curr_ans['accuracy'] > 0.8:
+            channel_accs.append(curr_ans['accuracy'])
+            best_params.append(curr_ans['parameters'])
+            selected_channels.append(channel)
+        # channel_accs.append(curr_ans['accuracy'])
+        # best_params.append(curr_ans['parameters'])
+
+    from sklearn.model_selection import KFold
+    indices = np.arange(len(training_labels))
+
+    all_accs = list()
+    for train_idx, test_idx in KFold(n_splits=3).split(indices):
+        all_preds = list()
+        y_true = None
+        for idx, channel in enumerate(selected_channels):
+            data, labels = final_eeg_to_train_data(processed_eeg[:, :, channel, :], training_labels)
+            x_train = data[train_idx]
+            y_train = labels[train_idx]
+            x_test = data[test_idx]
+            if y_true is None:
+                y_true = labels[test_idx]
+            assert np.all(y_true == labels[test_idx])
+            curr_model = SVC(**best_params[idx])
+            curr_model.fit(x_train, y_train)
+            all_preds.append(curr_model.predict(x_test))
+
+        votes = np.mean(all_preds, axis=0)
+        final_preds = votes >= len(selected_channels)
+        final_preds = final_preds.astype('int')
+        all_accs.append(np.sum(final_preds == y_true)/len(y_true))
+
+    print(f'{all_accs}')
+    print(f'final acc: {np.mean(all_accs)}')
+
+
 def main_search(recording_folder_path: str, models_folder: Optional[str] = None, search_channels=True):
     """
     This function preforms hyperparameter and channel search (if selected) creates the best model and saves it to the
@@ -240,5 +287,6 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print('Not enough input parameters')
         exit(-1)
-    start_log(True)
+    start_log(True, 'train')
     main_search(*sys.argv[1:])
+    # main_ensemble_search(sys.argv[1])

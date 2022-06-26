@@ -18,3 +18,6 @@ Python-TestModels/data/*
 *.mat
 *.zip
 P300/recordingFolder/100/19-May-2022 14-47-04/desktop.ini
+P300/recordingFolder/100/subjectsModels/model_0.9__22_08_06/model_SVM_0.84.sav
+*.sav
+*.json

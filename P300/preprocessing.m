@@ -19,9 +19,9 @@ function [splitEEG, meanTrigs, subtractedMean, processedEEG] = preprocessing(EEG
 %% Bandpass TODO
     bandpassedEEG = EEG;
 
-%% Laplacian
+%% Laplacian ADD?
     chanMap = Utils.Config.chanMap;
-    bandpassedEEG = laplacian(bandpassedEEG,chanMap('PO3'), cell2mat(values(chanMap,{'PO7', 'P3','O1','POZ'})));
+    %bandpassedEEG = laplacian(bandpassedEEG,chanMap('PO3'), cell2mat(values(chanMap,{'PO7', 'P3','O1','POZ'})));
 
 %% Splitting
     preTriggerTimeForMean = 0.2;
@@ -52,7 +52,7 @@ function [meanTrigs] = averageTriggersByClass(splitEEG, numTrials, classes, eegC
     meanTrigs = zeros(numTrials, length(classes), eegChannels, windowSize);
     
     for currTrial=1:numTrials    
-        for class = classes
+        for class = 1:max(classes)
             meanTrigs(currTrial,class,:,:) = mean(splitEEG(currTrial,trainingVector(currTrial,:) == class,:,:),2);
         end
     end

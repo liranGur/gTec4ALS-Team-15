@@ -16,6 +16,8 @@ close all; clear; clc;
     finalFolder = splitPath{length(splitPath)};
     if strcmp(finalFolder, Utils.Config.modelDirName)
         modelFolder = selectModelByAcc(modelFolder);
+    else
+        modelFolder = strcat(modelFolder, '\');
     end
     
     display(modelFolder);
@@ -39,8 +41,10 @@ close all; clear; clc;
     downSampleRate = offlineParameters.downSampleRate;
 
     % This is a stupid way that needs to be changed to allow shorter online phase than oflline training pahse
-    if ceil(1/oddBallProb)*numClasses >= 2*triggersInTrial 
-        triggersInTrial = ceil(1/oddBallProb)*numClasses + startingNormalTriggers;
+    safety = 5;
+    possibleLen = ceil(1/oddBallProb)*numClasses*4 + startingNormalTriggers + safety;
+    if possibleLen < triggersInTrial
+        triggersInTrial = possibleLen;
     end
 
     %% Set up recording
@@ -65,17 +69,14 @@ close all; clear; clc;
         save(strcat(modelFolder, inferenceFile), 'processedEEG');
         
         %% Predict
-        pythonCommand = ['python .\PythonCode\OnlineInference.py' ' ' modelFolder ' ' inferenceFile];
-        [inferedClass, pyOutput] = system(pythonCommand, '-echo');
+        pythonCommand = ['python .\PythonCode\OnlineInference.py' ' ' modelFolder ' ' inferenceFile ' 0.1 0.2 0.5 0.4 '];
+        [exitStatus, pyOutput] = system(pythonCommand, '-echo');
         
-        if inferedClass == -1
+        if exitStatus < 0
             set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
             Recording.DisplayTextOnFig('The model was unable to select an answer please try again');
-        elseif inferedClass == 1    % This assumes there is an idle class TODO fix this
-            set(fig, 'color', 'black');
-            Recording.DisplayTextOnFig('<html>The model was unable to select an answer.<br>Probably some problem running the model<br>Program will close now');
-            error('Python script of online inference returned 1, there is probably some bug')
         else
+            inferedClass = str2num(pyOutput);
             set(fig, 'color', 'black');          % imshow removes background color, therefore we need to set it again before showing more text
             Recording.DisplayTextOnFig(['The selected response was ' classesNames(inferedClass)]);
         end

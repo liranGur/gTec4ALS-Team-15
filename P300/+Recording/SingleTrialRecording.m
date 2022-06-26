@@ -33,7 +33,7 @@ function [trainingVec, trialEEG, triggersTime, backupTimes] = SingleTrialRecordi
 %% Prepare Trial
     triggersTime = zeros(triggersInTrial + 1, 1);
     backupTimes = zeros(triggersInTrial + 1, 1);
-    trialEEG = zeros(Utils.Config.eegChannels, eegSampleSize);
+    trialEEG = zeros(1, Utils.Config.eegChannels, eegSampleSize);
     
     trainingVec = Utils.TrainingVecCreator(numClasses, oddBallProb, triggersInTrial, is_visual);
     assert(all(trainingVec <= (numClasses + 1)), 'Sanity check training Vector')
@@ -68,7 +68,7 @@ function [trainingVec, trialEEG, triggersTime, backupTimes] = SingleTrialRecordi
 
     pause(Utils.Config.pauseBeforeDump);
     backupTimes(triggersInTrial+1) = posixtime(datetime('now'));
-%     trialEEG(currTrial, :, :) = recordingBuffer.OutputPort(1).Data'; 
+    trialEEG(1, :, :) = recordingBuffer.OutputPort(1).Data';    % CHANGE FOR NO RECORDING
     triggersTime(triggersInTrial+1) = posixtime(datetime('now'));
     
 end
