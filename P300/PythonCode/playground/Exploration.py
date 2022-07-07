@@ -96,8 +96,8 @@ def check_known_infer(folder_path: str, targets_diff=0.1, inner_diff=0.2, min_pr
     import warnings
     warnings.filterwarnings("ignore")
     ans_dict = {-1: 'error',
-                0: 'no',
-                1: 'yes'}
+                0: 'square',    # square / no
+                1: 'square'}   # triangle / yes
     model = load_model(folder_path)
     for file_name in os.listdir(folder_path):
         if not file_name.startswith('rec_dat'):
@@ -126,6 +126,6 @@ def explore_downsampling(data_folder: str):
 
 
 if __name__ == '__main__':
-    check_known_infer('C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\500\\subjectsModels\\second_test_2')
-    # test_proba('C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\500\\subjectsModels\\second_test_2')
+    check_known_infer('C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\500\\xgboosttesting\\model_0.90___22_07_02_20_32')
+    # test_proba('C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\500\\xgboosttesting\\model_0.90___22_07_02_20_32')
     # explore_downsampling('C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\500\\26-Jun-2022_12-42-41')

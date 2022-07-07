@@ -103,14 +103,14 @@ def svm_hp_search(train_data: np.ndarray, train_labels: Union[List, np.ndarray])
 
 def xgboost_hp_search(train_data: np.ndarray, train_labels: Union[List, np.ndarray]) -> Dict:
     x_train, y_train = final_eeg_to_train_data(train_data, train_labels)
-    parameters = [{'n_estimators': [25, 50, 75, 100],
-                   'feature_selector': ['cyclic', 'shuffle'],
+    estimators = [10, 15, 20]
+    parameters = [{'n_estimators': estimators,
                    'booster': ['gblinear']
                    },
-                  {'n_estimators': [25, 50, 100],
+                  {'n_estimators': estimators,
                    'max_depth': [None, 2, 5, 10],
                    'subsample': [0.9, 1.],
-                   'gamma': [0.5, 1, 5, 10],
+                   'gamma': [0.5, 1, 5],
                    'booster': ['gbtree', 'dart'],
                    }
                   ]
@@ -138,7 +138,7 @@ def channel_search_general(channels_comb_lst: List, data_manipulation_func: Call
     # model_search_results = np.array(p_map(search_func, final_train_data))
     model_search_results = np.array(list(map(search_func, tqdm(final_train_data))))
     best_accs = [res['accuracy'] for res in model_search_results]
-    best_res_idx = np.argpartition(best_accs, -3)[-3:]    # TODO change to 5
+    best_res_idx = np.argpartition(best_accs, -5)[-5:]
     final_results = model_search_results[best_res_idx]
     for idx, curr_res in enumerate(final_results):
         curr_res['channels'] = channels_comb_lst[best_res_idx[idx]]
@@ -234,10 +234,11 @@ def save_data_for_matlab(models_folder, recording_folder_path, model, result):
     :param result: the final result object of the search to save
     :return: path to model save directory
     """
-    model_folder_name = f'model_{result["accuracy"]:.2f}___{datetime.now().strftime("%y_%m_%d_%H_%M")}'
+    model_folder_name = f'model_{result["accuracy"]:.2f}___{datetime.now().strftime("%Y_%m_%d_%H_%M")}'
     save_dir = os.path.join(models_folder, model_folder_name)
     os.makedirs(save_dir, exist_ok=True)
     joblib.dump(model, os.path.join(save_dir, f'model_{result["name"]}_{result["accuracy"]:.2f}.sav'))
+    result['source_dir'] = recording_folder_path
     with open(os.path.join(save_dir, const.search_result_file), "w") as file:
         json.dump(result, file)
     shutil.copy(os.path.join(recording_folder_path, 'parameters.mat'), os.path.join(save_dir, 'parameters.mat'))
@@ -302,7 +303,7 @@ def main_search(recording_folder_path: str, models_folder: Optional[str] = None,
     """
     processed_eeg, training_labels = load_data(recording_folder_path)
     if search_channels:
-        log_data('Doing channels search')
+        log_data('Doing channels search for XGB')
         final_result = channels_search(processed_eeg, training_labels, xgboost_hp_search)
     else:
         log_data('Skipping channels search')
