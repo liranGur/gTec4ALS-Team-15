@@ -56,7 +56,7 @@ def probabilities_decision_func(probs: np.ndarray, targets_diff: float, inner_di
 
 
 def infer_data(folder_path: str, data_file_name: str, targets_diff: float = 0.1,
-               inner_diff: float = 0.15, min_proba_strong: float = 0.5, min_proba_weak: float = 0.4) -> int:
+               inner_diff: float = 0.2, min_proba_strong: float = 0.5, min_proba_weak: float = 0.4) -> int:
     model = load_model(folder_path)
     log_data('received parameters', sys.argv[1:],
              f'{targets_diff=}, {inner_diff=}, {min_proba_strong=}, {min_proba_weak=}')
