@@ -41,7 +41,7 @@ def visualize_raw_eeg_single_trial(trial_data: np.ndarray, triggers_time: np.nda
 
 def vis_raw_data(save_folder: str):
     eeg_data = load_mat_data(const.eeg_name, save_folder)
-    sequences = load_mat_data(const.training_sequences, save_folder)
+    sequences = load_mat_data(const.training_vector, save_folder)
     labels = load_mat_data(const.training_labels, save_folder).flatten()
     parameters = load_parameters(save_folder)
     triggers_time = load_mat_data(const.triggers_time, save_folder)
@@ -70,7 +70,7 @@ def plot_raw_data_with_triggers_lines(save_folder: str, trial_to_plot: int=1, hz
 
 
     eeg_data = load_mat_data(const.eeg_name, save_folder)
-    sequences = load_mat_data(const.training_sequences, save_folder)
+    sequences = load_mat_data(const.training_vector, save_folder)
     labels = load_mat_data(const.training_labels, save_folder).flatten()
     triggers_time = load_mat_data(const.triggers_time, save_folder)
     eeg_mean = mean(eeg_data[trial_to_plot], axis=0)

@@ -2,12 +2,10 @@ import json
 import logging
 import os
 import random
-import sys
 from typing import Tuple, Dict
 import numpy as np
 import pandas as pd
 import scipy.io
-
 from config import Const
 
 
@@ -51,3 +49,20 @@ def log_data(*args):
             if isinstance(arg, set):
                 arg = list(arg)
             logging.debug(json.dumps(arg))
+
+
+def convert_triggers_times_to_sample_idx(triggers_times: np.ndarray, hz: int):
+    start_times = np.expand_dims(triggers_times[:, 0], axis=1)
+    real_times = triggers_times[:, 1:] - start_times
+    samples = real_times * hz
+    return np.round(samples).astype(int)
+
+
+def convert_sample_idx_to_trigger_time(samples: np.ndarray, trigger_sample_idx: int, hz: int):
+    if trigger_sample_idx == -1 or trigger_sample_idx == 0:
+        return np.arange(len(samples)) / hz
+    else:
+        post_times = np.arange(len(samples) - trigger_sample_idx) / hz
+        pre_times = np.flip(np.arange(-1, - (len(samples) - len(post_times) + 1), step=-1) / hz)
+        times = np.concatenate((pre_times, post_times))
+        return times
