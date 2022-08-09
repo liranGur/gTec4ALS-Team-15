@@ -1,6 +1,5 @@
 function DisplaySetUpOld()
-%DISPLAYSETUO Summary of this function goes here
-%   Detailed explanation goes here
+%DISPLAYSETUO old code of dispaly set up not used anymore
 % Checking monitor position and number of monitors
 monitorPos = get(0,'MonitorPositions');
 monitorN = size(monitorPos, 1);
