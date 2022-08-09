@@ -34,9 +34,9 @@ def probabilities_decision_func(probs: np.ndarray, targets_diff: float, inner_di
     :param probs: array of predict_proba result for model,
                   shape: #classes for classification, #2 (number of possible classifications)
     :param targets_diff: minimal difference between the top 2 probabilities for each possible class
-    :param inner_diff:
-    :param min_proba_strong:
-    :param min_proba_weak:
+    :param inner_diff: difference threshold in probability between the differen samples
+    :param min_proba_strong: minimum probability value with a smaller margin of difference between samples
+    :param min_proba_weak: minimum probability value with a inner_dif as margin of difference between samples
     :return:
     """
     num_possible_classes = 2
@@ -57,6 +57,16 @@ def probabilities_decision_func(probs: np.ndarray, targets_diff: float, inner_di
 
 def infer_data(folder_path: str, data_file_name: str, targets_diff: float = 0.1,
                inner_diff: float = 0.2, min_proba_strong: float = 0.5, min_proba_weak: float = 0.4) -> int:
+    """
+    Run all inference steps and save the results to folder_path.
+    :param folder_path: model & recording data folder
+    :param data_file_name: recording data folder name
+    :param targets_diff: minimal difference between the top 2 probabilities for each possible class
+    :param inner_diff: difference threshold in probability between the differen samples
+    :param min_proba_strong: minimum probability value with a smaller margin of difference between samples
+    :param min_proba_weak: minimum probability value with a inner_dif as margin of difference between samples
+    :return:
+    """
     model = load_model(folder_path)
     log_data('received parameters', sys.argv[1:],
              f'{targets_diff=}, {inner_diff=}, {min_proba_strong=}, {min_proba_weak=}')

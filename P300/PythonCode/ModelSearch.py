@@ -3,7 +3,7 @@ import json
 import os
 import sys
 from functools import partial
-from typing import List, Dict, Union, Callable, Set, Any, Optional
+from typing import List, Dict, Union, Callable, Set, Any, Optional, Tuple
 import numpy as np
 import shutil
 from p_tqdm import p_map
@@ -23,7 +23,12 @@ MODELS_MAPPINGS = {'SVM': SVC,
                    'xgb': XGBClassifier}
 
 
-def load_data(folder_path):
+def load_data(folder_path) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    loads processed eeg data and training lables
+    :param folder_path:
+    :return: Tuple of np.ndarrays of processed eeg and training labaels
+    """
     log_data(f'loading data from: {folder_path}')
     processed_eeg = load_mat_data(Const.processed_eeg, folder_path)
     training_labels = load_mat_data(Const.training_labels, folder_path)
@@ -78,7 +83,7 @@ def grid_search_multiple_params(params_lst: List, x_train: np.ndarray, y_train: 
 
 def svm_hp_search(train_data: np.ndarray, train_labels: Union[List, np.ndarray]) -> Dict:
     """
-    Hyper parameter search for svm
+    Hyperparameter search for svm
     :param train_data: final eeg training data with shape: #trial, #classes, sample
     :param train_labels: list of labels for each trial
     :return: dictionary with the best accuracy and parameters
@@ -102,6 +107,12 @@ def svm_hp_search(train_data: np.ndarray, train_labels: Union[List, np.ndarray])
 
 
 def xgboost_hp_search(train_data: np.ndarray, train_labels: Union[List, np.ndarray]) -> Dict:
+    """
+    Hyperparameters search for Xgboost
+    :param train_data:
+    :param train_labels:
+    :return: dictionary with the best accuracy and parameters
+    """
     x_train, y_train = final_eeg_to_train_data(train_data, train_labels)
     estimators = [10, 15, 20]
     parameters = [{'n_estimators': estimators,
@@ -121,7 +132,7 @@ def xgboost_hp_search(train_data: np.ndarray, train_labels: Union[List, np.ndarr
 
 
 def channel_search_general(channels_comb_lst: List, data_manipulation_func: Callable[[List], List],
-                           filtered_eeg: List, search_func: Callable[[np.ndarray], Dict]):
+                           filtered_eeg: List, search_func: Callable[[np.ndarray], Dict]) -> Dict:
     """
     A function that generalize the channel manipulation search
     :param channels_comb_lst: list of all channels combinations to check
@@ -169,7 +180,7 @@ def concat_channel_search(channels_comb: Set, processed_eeg: np.ndarray,
                           training_labels: Union[List, np.ndarray],
                           model_hp_search_func) -> Dict:
     """
-    Do channel parameter search by concatinating all channels
+    Do channel parameter search by concatenating all channels
     :param channels_comb: set of combinations of all channels
     :param processed_eeg: the processed eeg with shape: #trial, #classes, #channels, sample
     :param training_labels: list of training labels with len: #trials
@@ -225,7 +236,7 @@ def final_model_train(processed_eeg: np.ndarray, training_labels: Union[List, np
     return model
 
 
-def save_data_for_matlab(models_folder, recording_folder_path, model, result):
+def save_data_for_matlab(models_folder, recording_folder_path, model, result) -> str:
     """
     Save the model, search result and needed data for online in a newly created folder in models_folder
     :param models_folder: folder where a directory with the result will be saved
@@ -245,6 +256,45 @@ def save_data_for_matlab(models_folder, recording_folder_path, model, result):
     return save_dir
 
 
+def main_search(recording_folder_path: str, models_folder: Optional[str] = None, search_channels=True):
+    """
+    This function preforms hyperparameter and channel search (if selected) creates the best model and saves it to the
+    folder received in folder_path
+    :param recording_folder_path: path of folder with the recording data
+    :param models_folder: folder for saving the model - if None model will be saved in folder_path
+    :param search_channels: True if channel search is also wanted
+    :return:
+    """
+    processed_eeg, training_labels = load_data(recording_folder_path)
+    if search_channels:
+        log_data('Doing channels search for XGB')   # Change here the name
+        final_result = channels_search(processed_eeg, training_labels, xgboost_hp_search)
+    else:
+        log_data('Skipping channels search')
+        final_result = None
+
+    log_data('Final Results:', final_result)
+    final_model = final_model_train(processed_eeg, training_labels, final_result)
+    if models_folder is not None:
+        save_dir = save_data_for_matlab(models_folder, recording_folder_path, final_model, final_result)
+    else:
+        joblib.dump(final_model, os.path.join(recording_folder_path, f'model_{final_result["accuracy"]:.2f}'))
+        save_dir = recording_folder_path
+
+    print('******')
+    print(save_dir)
+
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print('Not enough input parameters')
+        exit(-1)
+    start_log(True, 'train', sys.argv[1])
+    main_search(*sys.argv[1:])
+    # main_ensemble_search(sys.argv[1])
+
+
+# <editor-fold desc="Decision Trees Ensemble Model Search">
 def main_ensemble_search(recording_folder_path):
     processed_eeg, training_labels = load_data(recording_folder_path)
     ensemble_search_hp(processed_eeg, training_labels)
@@ -290,41 +340,4 @@ def ensemble_search_hp(processed_eeg, training_labels):
 
     print(f'{all_accs}')
     print(f'final acc: {np.mean(all_accs)}')
-
-
-def main_search(recording_folder_path: str, models_folder: Optional[str] = None, search_channels=True):
-    """
-    This function preforms hyperparameter and channel search (if selected) creates the best model and saves it to the
-    folder received in folder_path
-    :param recording_folder_path: path of folder with the recording data
-    :param models_folder: folder for saving the model - if None model will be saved in folder_path
-    :param search_channels: True if channel search is also wanted
-    :return:
-    """
-    processed_eeg, training_labels = load_data(recording_folder_path)
-    if search_channels:
-        log_data('Doing channels search for XGB')
-        final_result = channels_search(processed_eeg, training_labels, xgboost_hp_search)
-    else:
-        log_data('Skipping channels search')
-        final_result = None
-
-    log_data('Final Results:', final_result)
-    final_model = final_model_train(processed_eeg, training_labels, final_result)
-    if models_folder is not None:
-        save_dir = save_data_for_matlab(models_folder, recording_folder_path, final_model, final_result)
-    else:
-        joblib.dump(final_model, os.path.join(recording_folder_path, f'model_{final_result["accuracy"]:.2f}'))
-        save_dir = recording_folder_path
-
-    print('******')
-    print(save_dir)
-
-
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print('Not enough input parameters')
-        exit(-1)
-    start_log(True, 'train', sys.argv[1])
-    main_search(*sys.argv[1:])
-    # main_ensemble_search(sys.argv[1])
+# </editor-fold>
