@@ -1,6 +1,13 @@
 function [usbObj, scopeObj, impObj, ampObj] = CreateSimulinkObj()
-%CREATESIMULINKOBJ Summary of this function goes here
-%   Detailed explanation goes here
+%CREATESIMULINKOBJ Creates the simulink object and loads the simulink
+%systems
+% 
+%  OUTPUT:
+%   - usbObj - simulink usb object - used for getting the different
+%   simulink model parts
+%   - scopeObje - simulink scope object
+%   - impObj - simulink impedance object
+%   - ampObj - simulink amplifier object
 
 usbObj          = 'USBamp_offline';
 ampObj          = [usbObj '/g.USBamp UB-2016.03.01'];

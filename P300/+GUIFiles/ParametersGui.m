@@ -1,7 +1,6 @@
 function [is_visual, trialLength, numClasses, subId, numTrials, timeBetweenTriggers, oddBallProb, ...
     calibrationTime, pauseBetweenTrials, triggerBank, timeBeforeJitter] = ParametersGui()
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+%ParametersGui - Display the parameters gui for offline recording
 
 % location parameters
 editor_width = 0.1;
