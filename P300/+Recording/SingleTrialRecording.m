@@ -63,7 +63,7 @@ function [trainingVec, trialEEG, triggersTime, backupTimes] = SingleTrialRecordi
 
     pause(Utils.Config.pauseBeforeDump);
     backupTimes(triggersInTrial+1) = posixtime(datetime('now'));
-    trialEEG(1, :, :) = recordingBuffer.OutputPort(1).Data';    % CHANGE FOR NO RECORDING
+    trialEEG(1, :, :) = recordingBuffer.OutputPort(1).Data';    % CHANGE FOR NO RECORDING   - comment out this line
     triggersTime(triggersInTrial+1) = posixtime(datetime('now'));
     
 end

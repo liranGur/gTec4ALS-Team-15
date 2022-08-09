@@ -239,7 +239,7 @@ def plot_raw_split(folder_path: str, trial: int, convert_to_times: bool, trigger
     trigger_sample_idx = _set_trigger_sample_for_split_data(trigger_sample_idx, trigger_time_from_split_start, hz)
     triggers_indices = _set_triggers_indices_for_split_data(split_eeg_data, training_labels, triggers_indices, triggers_classes)
     v_lines = _set_v_lines_for_split_data(draw_trigger_line, training_labels, trigger_sample_idx, triggers_indices)
-    '
+
     if plot_for_trigger:
         for idx, curr_trigger in enumerate(triggers_indices):
             title = f'Split EEG trial: {trial} and trigger: {curr_trigger}'
