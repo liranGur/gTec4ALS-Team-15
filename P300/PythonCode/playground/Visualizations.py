@@ -36,8 +36,26 @@ def _get_plot_x_vals(curr_data, convert_to_times: bool, trigger_sample_idx: int,
 
 
 def my_subplots(data: np.ndarray, convert_to_times: bool, subplot_titles: Optional[List[str]], title: str,
-                trigger_sample_idx: int, v_lines: Optional[List[Tuple[Union[int, str]]]], legends_names: Optional[List[str]],
+                trigger_sample_idx: int, v_lines: Optional[List[Tuple[Union[int, str]]]],
+                legends_names: Optional[List[str]],
                 rows: int, cols: int, hz: int = DEF_HZ):
+    """
+    Plot a plotly plot with subplot.
+    In case of a 3D data it will group all the seocond dimension data into a single subplot for each entry in the first
+    dimension, e.g., for data with shape: (5,3,128) it will plot on 5 subplots and each subplot will contain 3 entries
+    with size of 128.
+    :param data: data to plot with maximum dimension of 3
+    :param convert_to_times: should the X values be sample index or time
+    :param subplot_titles:
+    :param title:
+    :param trigger_sample_idx: idx of the trigger in the split window
+    :param v_lines: vertical lines location to add to plot
+    :param legends_names:
+    :param rows:
+    :param cols:
+    :param hz:
+    :return:
+    """
     x_title = 'sample index' if not convert_to_times else 'time since trigger'
     v_lines = list() if v_lines is None else v_lines
     if legends_names is None:
