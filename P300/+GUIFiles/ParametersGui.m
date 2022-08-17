@@ -1,7 +1,6 @@
 function [is_visual, trialLength, numClasses, subId, numTrials, timeBetweenTriggers, oddBallProb, ...
     calibrationTime, pauseBetweenTrials, triggerBank, timeBeforeJitter] = ParametersGui()
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+%ParametersGui - Display the parameters gui for offline recording
 
 % location parameters
 editor_width = 0.1;
@@ -51,17 +50,17 @@ GUI.bank = uicontrol('style','push',...
 % Set subID text
 [GUI.subIDtxt, GUI.subID] = LabelEditorCreator(...
     [lables_col_x_pos(1) labels_row_y_pos(1) text_width text_height], 'Subject ID', ...
-    [editor_col_x_pos(1) editor_row_y_pos(1) editor_width editor_height], '100');
+    [editor_col_x_pos(1) editor_row_y_pos(1) editor_width editor_height], '500');
 
 %number of classes
 [GUI.nClstxt, GUI.nCls] = LabelEditorCreator(...
     [lables_col_x_pos(1) labels_row_y_pos(2) text_width text_height], '# of classes:',...
-    [editor_col_x_pos(1) editor_row_y_pos(2) editor_width editor_height], '3');
+    [editor_col_x_pos(1) editor_row_y_pos(2) editor_width editor_height], '2');
 
 %system calibration time
 [GUI.calibTxt, GUI.calibrationTime] = LabelEditorCreator(...
     [lables_col_x_pos(1) labels_row_y_pos(3) text_width text_height], 'Calibration Time (sec):', ...
-    [editor_col_x_pos(1) editor_row_y_pos(3) editor_width editor_height], '20');
+    [editor_col_x_pos(1) editor_row_y_pos(3) editor_width editor_height], '30');
 
 %time between triggers 
 [GUI.timeBetweenTriggersTxt, GUI.timeBetweenTriggers] = LabelEditorCreator(...
@@ -71,7 +70,7 @@ GUI.bank = uicontrol('style','push',...
 %Oddball Probability
 [GUI.trialLengthTxt, GUI.trialLength] = LabelEditorCreator(...
     [lables_col_x_pos(2) labels_row_y_pos(2) text_width text_height], ['Trail Length', sprintf('\n'), '(# of triggers):'], ...
-    [editor_col_x_pos(2) editor_row_y_pos(2) editor_width editor_height], '40');
+    [editor_col_x_pos(2) editor_row_y_pos(2) editor_width editor_height], '30');
 
 %pause between trials
 [GUI.pauseBetweenTrialsTxt, GUI.pauseBetweenTrials] = LabelEditorCreator(...
@@ -102,7 +101,7 @@ GUI.avType    = uicontrol('style','popupmenu',...
 
 %% Callbacks
 % triggerBank{1}= strcat(pwd, );
-GUI.bank.UserData = '.\TriggersBank\visual-3-classes-white-square';
+GUI.bank.UserData = '.\TriggersBank\visual-2-white';
 set(GUI.Imp,'callback',{@GUIFiles.OpenImpedanceCallback});
 set(GUI.bank,'callback',{@GUIFiles.SelectTriggerBankCallback, GUI})
 
