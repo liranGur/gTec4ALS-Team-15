@@ -413,6 +413,18 @@ def plot_mean_triggers(folder_path: str, trials: Optional[Union[int, List[int]]]
                 rows=rows, cols=cols, hz=hz)
 
 
+def plot_subtracted_mean(folder_path: str, trials: Optional[Union[int, List[int]]],
+                       trigger_sample_idx: Optional[int], trigger_time_from_split_start: Optional[float],
+                       triggers_classes: Optional[Union[List[int], int]],
+                       draw_trigger_line: bool, convert_to_times: bool,
+                       split_to_plots_by_trials: bool, split_to_plots_by_class: bool, split_to_plots_by_channel: bool,
+                       group_classes_in_subplots: bool, group_trials_in_subplots: bool,
+                       channels_to_use: Union[List, np.ndarray] = DEF_CHANNELS,
+                       rows: int = DEF_ROWS, cols: int = DEF_COLS, hz: int = DEF_HZ):
+    plot_mean_triggers(**locals(), data_name=const.subtracted_mean)
+
+
+
 def plot_processed_eeg(folder_path: str, trials: Optional[Union[int, List[int]]],
                        trigger_sample_idx: Optional[int], trigger_time_from_split_start: Optional[float],
                        triggers_classes: Optional[Union[List[int], int]],
@@ -448,7 +460,7 @@ def plot_processed_eeg(folder_path: str, trials: Optional[Union[int, List[int]]]
 
 
 def test():
-    folder_path = 'C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\500\\26-Jun-2022_13-08-42-yes-no'
+    folder_path = 'C:\\Ariel\\Files\\BCI4ALS\\gTec4ALS-Team-15\\P300\\recordingFolder\\500\\10-Jul-2022_11-29-14'
     # plot_raw_eeg(folder_path, sample_range=None, time_range=[0, 2], trials=[0, 1], convert_to_times=False,
     #              split_trials_to_multiple_plots=False, split_channels=False, draw_triggers=True, skip_base_class_lines=True)
     # plot_mean_triggers(folder_path, trials=5, convert_to_times=True, draw_trigger_line=False, trigger_sample_idx=None,
@@ -459,6 +471,10 @@ def test():
     #                    trigger_time_from_split_start=None, triggers_classes=1,
     #                    group_classes_in_subplots=False, split_to_plots_by_trials=False, split_to_plots_by_class=True,
     #                    split_to_plots_by_channel=True, channels_to_use=[12], group_trials_in_subplots=False)
+    plot_processed_eeg(folder_path, trials=6, split_to_plots_by_trials=True, split_to_plots_by_class=False,
+                         split_to_plots_by_channel=False, group_classes_in_subplots=False, group_trials_in_subplots=False,
+                         trigger_sample_idx=None, trigger_time_from_split_start=0.2, draw_trigger_line=False,
+                         convert_to_times=True, triggers_classes=[1,2])
 
 
 if __name__ == '__main__':
